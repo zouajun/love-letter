@@ -488,6 +488,22 @@ body.ed-open .edit-fab { opacity: 0; pointer-events: none; }
 .sync-status.is-ok { color: #4f7a5e; border-color: rgba(96, 150, 116, .3); background: rgba(96, 150, 116, .07); }
 .sync-status.is-err { color: #9c3d3d; border-color: rgba(163, 60, 60, .28); background: rgba(163, 60, 60, .05); }
 
+/* ---------- 推送状态 ---------- */
+.push-state {
+  padding: 10px 13px;
+  margin: 4px 0 12px;
+  border-radius: 9px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  letter-spacing: .02em;
+  background: rgba(255, 255, 255, .55);
+  border: 1px dashed var(--line-strong);
+  color: var(--muted);
+}
+.push-state.is-busy { color: color-mix(in srgb, var(--accent) 75%, var(--ink)); border-style: solid; border-color: color-mix(in srgb, var(--accent) 32%, transparent); }
+.push-state.is-ok { color: #4f7a5e; border-style: solid; border-color: rgba(96, 150, 116, .32); background: rgba(96, 150, 116, .08); }
+.push-state.is-err { color: #9c3d3d; border-style: solid; border-color: rgba(163, 60, 60, .3); background: rgba(163, 60, 60, .06); }
+
 .divider {
   display: flex;
   align-items: center;

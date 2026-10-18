@@ -31,6 +31,47 @@ function fitSize(w, h, maxEdge) {
   return { w: Math.round(w * scale), h: Math.round(h * scale) };
 }
 
+const EXT_BY_MIME = {
+  'image/webp': 'webp',
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/gif': 'gif',
+  'image/avif': 'avif'
+};
+
+export function extOf(mime) {
+  return EXT_BY_MIME[mime] || 'webp';
+}
+
+/** dataURL → 二进制 */
+export function dataURLToBytes(dataURL) {
+  const m = /^data:([^;,]*)(;base64)?,([\s\S]*)$/.exec(String(dataURL));
+  if (!m) throw new Error('图片数据格式不对');
+  const mime = m[1] || 'image/webp';
+  if (m[2]) {
+    const bin = atob(m[3]);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return { bytes, mime };
+  }
+  return { bytes: new TextEncoder().encode(decodeURIComponent(m[3])), mime };
+}
+
+/** 二进制 → base64（分块，避免栈溢出） */
+export function bytesToBase64(bytes) {
+  const CHUNK = 0x8000;
+  let out = '';
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    out += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(out);
+}
+
+/** 文本 → base64（UTF-8） */
+export function textToBase64(text) {
+  return bytesToBase64(new TextEncoder().encode(text));
+}
+
 export async function fileToCompactDataURL(file, { maxEdge = MAX_EDGE } = {}) {
   if (!file || !file.type.startsWith('image/')) throw new Error('请选择图片文件');
   if (file.size > 25 * 1024 * 1024) throw new Error('图片太大了（超过 25MB）');

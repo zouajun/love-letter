@@ -5,6 +5,7 @@
 import { fmtCN, fmtMD, fmtDot, weekdayCN, diffDays, countdown, pad } from './date.js';
 import { findCover, findNext } from './content.js';
 import { esc, HEART_SVG } from './ui.js';
+import { resolveImage } from './imgcache.js';
 
 const MAX_PHOTOS = 4;
 
@@ -56,7 +57,7 @@ export function renderLeft(el, content, tl) {
     </div>
 
     ${cover ? `<figure class="polaroid">
-      <img src="${esc(cover)}" alt="我们的照片" loading="eager" decoding="async">
+      <img src="${esc(resolveImage(cover))}" alt="我们的照片" loading="eager" decoding="async">
       <figcaption>${esc(content.settings.coverCaption || '按下快门的那一刻，刚好你在笑')}</figcaption>
     </figure>` : ''}
 
@@ -83,7 +84,7 @@ function photoHTML(images, title) {
   const count = Math.min(MAX_PHOTOS, images.length);
   const figures = images.slice(0, MAX_PHOTOS).map((src, i) => `
       <figure>
-        <img src="${esc(src)}" alt="${esc(title)} · 照片 ${i + 1}" loading="lazy" decoding="async">
+        <img src="${esc(resolveImage(src))}" alt="${esc(title)} · 照片 ${i + 1}" loading="lazy" decoding="async">
       </figure>`).join('');
   return `<div class="tl-photos" data-count="${count}">${figures}</div>`;
 }

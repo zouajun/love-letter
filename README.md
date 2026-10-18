@@ -6,7 +6,7 @@
 
 - 纯 HTML + CSS + 原生 JavaScript，**零依赖、零构建**
 - 所有内容只存在一个文件里：`data/content.json`
-- 自带浏览器内编辑器：改文字、加照片、改日期、切配色，改完导出 JSON 提交即可上线
+- 自带浏览器内编辑器：改文字、加照片、改日期、切配色，填一次 Token 就能**点一下直接提交到 GitHub**
 
 ![桌面端](assets/preview.jpg)
 
@@ -58,7 +58,7 @@ npx serve .
 2. 三个标签页：
    - **情书**：名字、在一起的日期、城市、配色、誓言的标题与正文
    - **时间轴**：增删改每一条记录、上传照片、开关「自动纪念日」
-   - **发布**：导出 / 导入 JSON、换封面图、丢弃草稿
+   - **发布**：提交到 GitHub、导出 / 导入 JSON、换封面图、丢弃草稿
 3. 改完点「完成」，右栏时间轴会立刻更新
 
 **怎么删掉一条记录**
@@ -68,15 +68,32 @@ npx serve .
 - 自动生成的纪念日（金色那张）：在「自动纪念日」下面找到它 → 「隐藏」。
   隐藏的会变灰，点「恢复」就又回来了。当天已经有手写记录的会自动标出来，不用管。
 
-> 删除是两步确认，不会点一下就没了；但确认之后只在本地草稿里，导出并提交才会影响线上。
+> 删除是两步确认，不会点一下就没了；但确认之后只在本地草稿里，提交上去才影响线上。
 
-改动会先存在**这台设备的浏览器**里（localStorage），刷新不丢，但**不会同步到线上**。
+改动会先存在**这台设备的浏览器**里（localStorage），刷新不丢，但**不会自动同步到线上**。
 
-想让别人也看到：
+### 提交上线：点一下按钮就行
 
-1. 「发布」→「导出 content.json」
-2. 用导出的文件替换仓库里的 `data/content.json`
-3. 提交、推送，GitHub Pages 会自动重新发布
+「发布」页里填好三样东西（只需填一次，之后记在这台设备上）：
+
+| 字段 | 填什么 |
+|---|---|
+| 仓库 | `你的用户名/仓库名`，例如 `zouajun/love-letter` |
+| 分支 | `main` |
+| Token | GitHub 的 fine-grained PAT，这个仓库的 **Contents: Read and write** |
+
+然后点 **「提交到 GitHub」**。它做的事：
+
+1. 把还没上传的照片压缩后写成 `assets/photos/xxx.webp` 文件
+2. `content.json` 里只留路径，不再内嵌 base64
+3. 所有文件**合成一个 commit** 提交（中途失败不会留下半套内容）
+4. GitHub Pages 大约 1 分钟后自动重新发布
+
+> Token 只存在你浏览器的 localStorage 里，不会写进 `content.json`，也不会跟着页面发布出去。
+> 换电脑要重新填一次；不想留了，点「清除 Token」。
+> 提交后本地预览里的照片靠浏览器缓存显示；想和仓库完全一致，在项目目录执行 `git pull`。
+
+**不想连 GitHub 也可以**：点「导出 content.json」，用文件替换仓库里的 `data/content.json`，再 `git commit && git push`。照片会以路径形式导出，图片文件需要你自己放进 `assets/photos/`。
 
 编辑器里的「丢弃草稿」会清掉本地改动、回到仓库里的版本。
 
@@ -132,8 +149,11 @@ npx serve .
 ## 照片
 
 - 放进 `assets/photos/`，4:3 或 16:9 观感最好（当前示例是 SVG 占位图，换成自己的 jpg/png 即可）
-- 在编辑器里上传的图片会在浏览器里压缩成 WebP（长边 ≤ 1400，尽量 ≤ 260KB）后**内联进 JSON**
-- 50 张以内这样最省事；再多的话建议把图片单独放进 `assets/photos/`，JSON 里只写路径
+- 图片是**独立的文件**，放在 `assets/photos/` 里，`content.json` 只记相对路径（比如 `assets/photos/e-mvdkqw6h-qn0l-1.webp`）
+- 在编辑器里选的照片会先在浏览器里压成 WebP（长边 ≤ 1400，尽量 ≤ 260KB），点「提交到 GitHub」时才写成文件传上去
+- 好处：`content.json` 永远只有几 KB，改文字不会重新下载一坨图片，仓库也不会因为反复编辑而膨胀；浏览器还能缓存图片
+- 手工加图片也可以：把文件丢进 `assets/photos/`，在 JSON 里写 `"images": ["assets/photos/你的图.webp"]`
+- 推送到 GitHub 后，本地预览会先用浏览器缓存里的图片顶上；执行 `git pull` 就能和仓库完全一致
 
 ---
 
@@ -145,7 +165,7 @@ npx serve .
    - Source: `Deploy from a branch`
    - Branch: `main`，目录 `/ (root)`，保存
 4. 等 1–2 分钟，访问 `https://<你的用户名>.github.io/love-letter/`
-5. 以后只需要改 `data/content.json` 并提交，Pages 会自动重新发布
+5. 以后改内容：页面里改完点「提交到 GitHub」即可；Pages 会自动重新发布
 
 > 仓库是公开的，内容是所有人都能看到的。想私密一点可以把仓库设为 Private（GitHub Pages 的私有仓库发布需要付费计划），或者干脆只在本地看。
 
@@ -167,14 +187,17 @@ npx serve .
 │   ├── content.js        数据规范化 + 时间轴/纪念日计算
 │   ├── render.js         左栏与时间轴的 DOM 生成
 │   ├── editor.js         浏览器内编辑器
+│   ├── publish.js        提交到 GitHub：图片转文件、组装 commit
+│   ├── github.js         GitHub API（blob → tree → commit）
+│   ├── imgcache.js       本地图片缓存（没 pull 也不裂图）
 │   ├── store.js          读取 JSON、本地草稿
-│   ├── image.js          照片压缩
+│   ├── image.js          照片压缩、dataURL ↔ 二进制
 │   ├── date.js           日期工具
 │   └── ui.js             提示、配色、下载、灯箱
 ├── data/
 │   └── content.json      ← 唯一需要你改的文件
 ├── assets/
-│   ├── photos/           照片
+│   ├── photos/           照片（编辑器上传的也会存到这里）
 │   ├── preview.jpg       桌面端预览图
 │   └── preview-mobile.jpg 移动端预览图
 └── .nojekyll             让 GitHub Pages 跳过 Jekyll

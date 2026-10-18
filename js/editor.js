@@ -7,6 +7,9 @@ import { toJSON, writeDraft, clearDraft } from './store.js';
 import { esc, toast, toastAction, download, applyPalette } from './ui.js';
 import { fileToCompactDataURL } from './image.js';
 import { toISO, startOfToday, fmtDot } from './date.js';
+import { loadConfig, saveConfig, pendingCount, pushToGithub } from './publish.js';
+import { describeError } from './github.js';
+import { putImage, pruneImages, allPaths } from './imgcache.js';
 
 const TABS = [
   { id: 'story', label: '情书' },
@@ -47,6 +50,9 @@ export function createEditor({ root, onApply }) {
   let pendingDelete = null;
   let confirmDiscard = false;
   let lastDeleted = null;
+  let pushCfg = loadConfig();
+  let pushState = null;
+  let pushing = false;
 
   function scheduleSave() {
     dirty = true;
@@ -282,24 +288,54 @@ export function createEditor({ root, onApply }) {
 
   function publishPane() {
     const json = toJSON(model);
-    const kb = Math.round(json.length / 1024);
+    const kb = Math.max(1, Math.round(json.length / 1024));
+    const pending = pendingCount(model);
+    const stateKind = pushState ? pushState.kind : '';
+    const stateText = pushState
+      ? pushState.text
+      : pending
+        ? `还有 ${pending} 张照片没上传，提交时会自动转成文件`
+        : '所有照片都已经是文件了';
+
     return `
       <div class="note">
-        <b>这里的改动只保存在这台设备的浏览器里。</b><br>
-        想让所有人都看到：点「导出 content.json」→ 用它替换仓库里的 <code>data/content.json</code> → 提交推送。GitHub Pages 会自动重新发布。
+        <b>改完点「提交到 GitHub」就上线了。</b><br>
+        照片会写成 <code>assets/photos/</code> 里的文件，<code>content.json</code> 只记路径，以后再也不会越滚越大。
       </div>
       <div class="sync-status${dirty ? '' : ' is-ok'}">
         ${lastSavedAt ? `草稿已保存 · ${clockText()}` : '还没有本地改动'} · ${model.events.length} 条记录 · 约 ${kb} KB
       </div>
+
+      <div class="divider">一键发布</div>
+      <div class="field">
+        <label class="field-label">仓库</label>
+        <input class="input" data-k="push.repo" value="${esc(pushCfg.repo)}" placeholder="用户名/仓库名" spellcheck="false" autocomplete="off">
+      </div>
+      <div class="field">
+        <label class="field-label">分支</label>
+        <input class="input" data-k="push.branch" value="${esc(pushCfg.branch)}" placeholder="main" spellcheck="false" autocomplete="off">
+      </div>
+      <div class="field">
+        <label class="field-label">Token</label>
+        <input class="input" type="password" data-k="push.token" value="" placeholder="${pushCfg.token ? '已保存，留空则沿用' : 'github_pat_…'}" spellcheck="false" autocomplete="off">
+        <p class="field-note">只存在这台设备的浏览器里，不会写进仓库，也不会上传。</p>
+      </div>
+      <div class="push-state${stateKind ? ` is-${stateKind}` : ''}">${esc(stateText)}</div>
+      <div class="row">
+        <button type="button" class="btn btn--primary" data-act="push">提交到 GitHub</button>
+        <button type="button" class="btn btn--ghost" data-act="forget">清除 Token</button>
+      </div>
+
+      <div class="divider">其他</div>
       <div class="row">
         <button type="button" class="btn" data-act="export">导出 content.json</button>
         <label class="btn" for="edImport" style="cursor:pointer">导入 JSON</label>
       </div>
       <input id="edImport" type="file" accept="application/json,.json" hidden data-k="import">
       <input id="edImportCover" type="file" accept="image/*" hidden data-k="cover">
-      <div class="divider">其他</div>
       <button type="button" class="btn" data-act="cover">更换封面图</button>
       <p class="field-note">封面会显示在左栏那张「拍立得」上。</p>
+
       <div class="divider">谨慎操作</div>
       ${confirmDiscard
         ? `<p class="ev-ask">丢掉本地改动，回到仓库里的版本？</p>
@@ -308,7 +344,7 @@ export function createEditor({ root, onApply }) {
              <button type="button" class="btn" data-act="discard-no">再想想</button>
            </div>`
         : `<button type="button" class="btn btn--danger" data-act="discard">丢弃草稿，恢复仓库版本</button>`}
-      <p class="field-note">浏览器会清掉本地改动并重新载入页面，导出的文件不受影响。</p>`;
+      <p class="field-note">浏览器会清掉本地改动并重新载入页面，已经提交上去的内容不受影响。</p>`;
   }
 
   function renderPane() {
@@ -354,6 +390,53 @@ export function createEditor({ root, onApply }) {
     }
   }
 
+  function setPushState(text, kind) {
+    pushState = { text, kind };
+    const box = nodes && nodes.body.querySelector('.push-state');
+    if (box) {
+      box.textContent = text;
+      box.className = `push-state${kind ? ` is-${kind}` : ''}`;
+    }
+  }
+
+  async function doPush() {
+    if (pushing) return;
+    pushing = true;
+    const btn = () => nodes && nodes.body.querySelector('[data-act="push"]');
+    if (btn()) btn().disabled = true;
+    setPushState('正在提交…', 'busy');
+
+    try {
+      flush();
+      pushCfg = loadConfig();
+      const res = await pushToGithub({
+        config: pushCfg,
+        content: model,
+        onProgress: (text) => setPushState(text, 'busy')
+      });
+
+      for (const item of res.uploaded) putImage(item.path, item.dataURL);
+      model = res.content;
+      pruneImages(allPaths(model));
+      dirty = true;
+      flush();
+
+      rerenderKeepScroll();
+      setPushState(`已提交 ${res.files} 个文件 · ${res.commit.slice(0, 7)} · 约 1 分钟后线上更新`, 'ok');
+      toast('已提交到 GitHub');
+      if (onApply) onApply(normalize(model), true);
+    } catch (err) {
+      const text = describeError(err);
+      rerenderKeepScroll();
+      setPushState(text, 'err');
+      toast(text, 6000);
+    } finally {
+      pushing = false;
+      const again = btn();
+      if (again) again.disabled = false;
+    }
+  }
+
   function onInput(e) {
     const el = e.target;
     if (!(el instanceof HTMLElement) || !el.dataset || !el.dataset.k) return;
@@ -361,6 +444,13 @@ export function createEditor({ root, onApply }) {
 
     const key = el.dataset.k;
     let value = el.value;
+
+    if (key.startsWith('push.')) {
+      const field = key.slice(5);
+      if (field === 'token' && !value) return; // 留空表示沿用已保存的
+      pushCfg = saveConfig({ [field]: value.trim() });
+      return;
+    }
 
     if (el.type === 'date' && !value) {
       const evBox = el.closest('.ev-edit');
@@ -478,6 +568,17 @@ export function createEditor({ root, onApply }) {
       flush();
       download('content.json', toJSON(model));
       toast('已导出 content.json');
+      return;
+    }
+    if (act === 'push') {
+      doPush();
+      return;
+    }
+    if (act === 'forget') {
+      pushCfg = saveConfig({ token: '' });
+      rerenderKeepScroll();
+      setPushState('已清除 Token，下次要用再填一次', 'ok');
+      toast('已清除 Token');
       return;
     }
     if (act === 'add') {
@@ -615,6 +716,9 @@ export function createEditor({ root, onApply }) {
     pendingDelete = null;
     confirmDiscard = false;
     lastDeleted = null;
+    pushCfg = loadConfig();
+    pushState = null;
+    pushing = false;
     dirty = false;
     root.innerHTML = '';
     shell();
