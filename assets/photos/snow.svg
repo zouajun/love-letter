@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900" role="img" aria-label="雪夜的窗">
+  <defs>
+    <linearGradient id="ns" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3B3B52"/>
+      <stop offset=".45" stop-color="#5B4A5C"/>
+      <stop offset="1" stop-color="#2E2836"/>
+    </linearGradient>
+    <radialGradient id="lamp" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#FFD9A0" stop-opacity=".95"/>
+      <stop offset=".45" stop-color="#FFC98A" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#FFC98A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nwig" cx=".5" cy=".45" r=".8">
+      <stop offset=".55" stop-color="#15121B" stop-opacity="0"/>
+      <stop offset="1" stop-color="#15121B" stop-opacity=".55"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#ns)"/>
+  <circle cx="300" cy="250" r="240" fill="url(#lamp)" opacity=".8"/>
+  <circle cx="300" cy="250" r="46" fill="#FFE8C4" opacity=".92"/>
+  <circle cx="880" cy="640" r="200" fill="url(#lamp)" opacity=".55"/>
+  <circle cx="880" cy="640" r="30" fill="#FFE0B4" opacity=".8"/>
+  <g fill="#FFF4E4">
+    <circle cx="180" cy="640" r="3.4" opacity=".85"/>
+    <circle cx="260" cy="740" r="2.6" opacity=".7"/>
+    <circle cx="520" cy="600" r="3" opacity=".6"/>
+    <circle cx="640" cy="760" r="2.4" opacity=".75"/>
+    <circle cx="760" cy="520" r="3.2" opacity=".55"/>
+    <circle cx="980" cy="420" r="2.8" opacity=".7"/>
+    <circle cx="1080" cy="760" r="3.4" opacity=".6"/>
+    <circle cx="420" cy="430" r="2.2" opacity=".5"/>
+    <circle cx="90" cy="790" r="2.6" opacity=".6"/>
+    <circle cx="1150" cy="220" r="2.2" opacity=".45"/>
+  </g>
+  <g stroke="#FFEFD8" stroke-width="3" stroke-linecap="round" opacity=".28">
+    <path d="M140 520 l 18 18"/><path d="M600 300 l 16 16"/><path d="M1020 560 l 16 16"/>
+    <path d="M700 840 l 16 16"/><path d="M340 860 l 16 16"/>
+  </g>
+  <rect width="1200" height="900" fill="url(#nwig)"/>
+</svg>

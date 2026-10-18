@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900" role="img" aria-label="傍晚的海滩">
+  <defs>
+    <linearGradient id="bsky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B4D6E2"/>
+      <stop offset=".5" stop-color="#E7DAD0"/>
+      <stop offset="1" stop-color="#F9DCC0"/>
+    </linearGradient>
+    <linearGradient id="bsea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9FBDC6"/>
+      <stop offset=".38" stop-color="#6C97A6"/>
+      <stop offset="1" stop-color="#436C7C"/>
+    </linearGradient>
+    <linearGradient id="bsand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8E7CD"/>
+      <stop offset=".4" stop-color="#F0D9B8"/>
+      <stop offset="1" stop-color="#DDBD97"/>
+    </linearGradient>
+    <radialGradient id="bglow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#FFE6BE" stop-opacity=".9"/>
+      <stop offset=".42" stop-color="#FFD9A8" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#FFD9A8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bvig" cx=".5" cy=".42" r=".84">
+      <stop offset=".55" stop-color="#3B2E28" stop-opacity="0"/>
+      <stop offset="1" stop-color="#3B2E28" stop-opacity=".26"/>
+    </radialGradient>
+    <clipPath id="bseaclip"><rect y="380" width="1200" height="200"/></clipPath>
+  </defs>
+
+  <rect width="1200" height="900" fill="url(#bsky)"/>
+  <circle cx="842" cy="350" r="250" fill="url(#bglow)"/>
+  <circle cx="842" cy="350" r="46" fill="#FFF1D8"/>
+  <circle cx="842" cy="350" r="46" fill="none" stroke="#FFF7E6" stroke-width="12" opacity=".45"/>
+
+  <g fill="#FFFFFF" opacity=".3">
+    <ellipse cx="236" cy="178" rx="158" ry="26"/>
+    <ellipse cx="318" cy="156" rx="92" ry="17"/>
+    <ellipse cx="146" cy="158" rx="58" ry="13"/>
+    <ellipse cx="986" cy="132" rx="118" ry="19"/>
+    <ellipse cx="1054" cy="118" rx="62" ry="12"/>
+  </g>
+
+  <rect y="378" width="1200" height="210" fill="url(#bsea)"/>
+  <g clip-path="url(#bseaclip)" fill="#FFFFFF">
+    <ellipse cx="842" cy="470" rx="74" ry="104" opacity=".3" fill="url(#bglow)"/>
+    <path d="M0 402 q 150 -5 300 2 t 300 0 t 300 3 t 300 -2" stroke="#FFFFFF" stroke-width="2" fill="none" opacity=".22"/>
+    <path d="M0 430 q 180 6 360 -2 t 360 4 t 360 -3" stroke="#FFFFFF" stroke-width="2" fill="none" opacity=".18"/>
+    <path d="M0 462 q 140 -6 280 1 t 280 -2 t 280 3 t 280 -1" stroke="#FFFFFF" stroke-width="2.5" fill="none" opacity=".2"/>
+    <path d="M0 498 q 200 7 400 -3 t 400 4 t 400 -4" stroke="#FFFFFF" stroke-width="3" fill="none" opacity=".16"/>
+    <path d="M0 534 q 160 -7 320 2 t 320 -3 t 320 4" stroke="#FFFFFF" stroke-width="3.5" fill="none" opacity=".14"/>
+  </g>
+
+  <path d="M0 556 C 180 594, 380 564, 600 588 C 820 612, 1010 566, 1200 594 L 1200 900 L 0 900 Z" fill="url(#bsand)"/>
+  <path d="M0 556 C 180 594, 380 564, 600 588 C 820 612, 1010 566, 1200 594" fill="none" stroke="#FFF9EE" stroke-width="7" opacity=".62"/>
+  <path d="M0 572 C 180 610, 380 580, 600 604 C 820 628, 1010 582, 1200 610" fill="none" stroke="#FFF9EE" stroke-width="2.5" opacity=".3"/>
+
+  <g fill="#D9B994" opacity=".5">
+    <ellipse cx="248" cy="676" rx="36" ry="12" transform="rotate(-13 248 676)"/>
+    <ellipse cx="330" cy="726" rx="34" ry="11" transform="rotate(-9 330 726)"/>
+    <ellipse cx="408" cy="784" rx="38" ry="12" transform="rotate(-5 408 784)"/>
+    <ellipse cx="890" cy="716" rx="32" ry="11" transform="rotate(11 890 716)"/>
+    <ellipse cx="958" cy="778" rx="30" ry="10" transform="rotate(15 958 778)"/>
+    <ellipse cx="792" cy="812" rx="26" ry="9" transform="rotate(8 792 812)"/>
+  </g>
+  <g fill="#C9A981" opacity=".62">
+    <circle cx="646" cy="700" r="7"/>
+    <circle cx="674" cy="714" r="4"/>
+    <circle cx="618" cy="726" r="5"/>
+    <circle cx="702" cy="694" r="3"/>
+    <path d="M1124 646 q 26 -24 54 0 q -26 22 -54 0z" opacity=".45"/>
+  </g>
+
+  <rect width="1200" height="900" fill="url(#bvig)"/>
+</svg>

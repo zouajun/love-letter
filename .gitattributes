@@ -1,0 +1,23 @@
+# 统一换行：文本按 LF 入库，Windows 上按需还原
+* text=auto
+
+# .bat 必须 CRLF，否则 cmd 解析报错（踩过的坑）
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+
+# 源码与文本
+*.html text eol=lf
+*.css  text eol=lf
+*.js   text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.svg  text eol=lf
+
+# 二进制
+*.jpg  binary
+*.jpeg binary
+*.png  binary
+*.webp binary
+*.ico  binary
+*.pdf  binary

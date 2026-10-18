@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900" role="img" aria-label="黄昏的海">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFEDDC"/>
+      <stop offset=".38" stop-color="#FAC8B6"/>
+      <stop offset=".64" stop-color="#E2929F"/>
+      <stop offset="1" stop-color="#B26C87"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C68A95"/>
+      <stop offset=".22" stop-color="#8E6274"/>
+      <stop offset=".7" stop-color="#544455"/>
+      <stop offset="1" stop-color="#332B3A"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#FFE6C2" stop-opacity=".95"/>
+      <stop offset=".55" stop-color="#FFD3A9" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#FFD3A9" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vig" cx=".5" cy=".46" r=".78">
+      <stop offset=".55" stop-color="#2A1F2C" stop-opacity="0"/>
+      <stop offset="1" stop-color="#2A1F2C" stop-opacity=".34"/>
+    </radialGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF4E2"/>
+      <stop offset="1" stop-color="#FFD9A8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#sky)"/>
+  <circle cx="742" cy="512" r="300" fill="url(#glow)"/>
+  <circle cx="742" cy="512" r="66" fill="url(#sun)"/>
+  <rect y="600" width="1200" height="300" fill="url(#sea)"/>
+  <path d="M742 600 L628 900 L856 900 Z" fill="#FFD9AE" opacity=".16"/>
+  <g fill="none" stroke="#FFE2C4" stroke-linecap="round" opacity=".5">
+    <path d="M0 632 q 120 -9 240 0 t 240 0 t 240 0 t 240 0 t 240 0" stroke-width="2"/>
+    <path d="M0 690 q 150 -11 300 0 t 300 0 t 300 0 t 300 0" stroke-width="2.4" opacity=".6"/>
+    <path d="M0 772 q 180 -12 360 0 t 360 0 t 360 0" stroke-width="3" opacity=".4"/>
+    <path d="M0 856 q 200 -12 400 0 t 400 0 t 400 0" stroke-width="3" opacity=".22"/>
+  </g>
+  <rect width="1200" height="900" fill="url(#vig)"/>
+</svg>
