@@ -146,27 +146,6 @@
       "images": [],
       "kind": "moment",
       "pinned": false
-    },
-    {
-      "id": "e-mvdkqw6h-qn0l",
-      "date": "2026-10-03",
-      "title": "一起去鸟巢",
-      "text": "这一天我们一起去看了鸟巢",
-      "images": [
-        "assets/photos/e-mvdkqw6h-qn0l-1.webp",
-        "assets/photos/e-mvdkqw6h-qn0l-2.webp"
-      ],
-      "kind": "moment",
-      "pinned": false
-    },
-    {
-      "id": "e-mvdv2isg-iwuc",
-      "date": "2026-10-31",
-      "title": "你好",
-      "text": "hhh1",
-      "images": [],
-      "kind": "moment",
-      "pinned": false
     }
   ]
 }
