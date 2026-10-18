@@ -51,15 +51,6 @@ body.ed-open .edit-fab { opacity: 0; pointer-events: none; }
   font-weight: 600;
   letter-spacing: .08em;
 }
-.ed-title small {
-  display: block;
-  margin-top: 5px;
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: .14em;
-  color: var(--muted);
-}
 .ed-close {
   flex: none;
   width: 34px;
@@ -449,27 +440,6 @@ body.ed-open .edit-fab { opacity: 0; pointer-events: none; }
 }
 .ed-foot .state.is-clean::before { background: #7fa88b; box-shadow: 0 0 0 3px rgba(127, 168, 139, .18); }
 .ed-foot .actions { display: flex; gap: 8px; }
-
-/* ---------- 提示块 ---------- */
-.note {
-  padding: 13px 15px;
-  margin-bottom: 18px;
-  border-radius: 11px;
-  border: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
-  background: color-mix(in srgb, var(--gold) 9%, transparent);
-  font-size: 11.5px;
-  line-height: 1.75;
-  letter-spacing: .02em;
-  color: color-mix(in srgb, var(--ink-2) 85%, var(--gold));
-}
-.note b { color: var(--ink); font-weight: 600; }
-.note code {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  padding: 1px 4px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, .65);
-}
 
 .sync-status {
   display: flex;

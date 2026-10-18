@@ -92,7 +92,7 @@ export function createEditor({ root, onApply }) {
       <div class="ed-backdrop" data-act="backdrop"></div>
       <aside class="ed-panel" role="dialog" aria-modal="true" aria-label="编辑情书">
         <header class="ed-head">
-          <h2 class="ed-title">编辑内容<small>LOCAL DRAFT · 只保存在这台设备</small></h2>
+          <h2 class="ed-title">编辑内容</h2>
           <button type="button" class="ed-close" data-act="close" aria-label="关闭">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
@@ -298,10 +298,6 @@ export function createEditor({ root, onApply }) {
         : '所有照片都已经是文件了';
 
     return `
-      <div class="note">
-        <b>改完点「提交到 GitHub」就上线了。</b><br>
-        照片会写成 <code>assets/photos/</code> 里的文件，<code>content.json</code> 只记路径，以后再也不会越滚越大。
-      </div>
       <div class="sync-status${dirty ? '' : ' is-ok'}">
         ${lastSavedAt ? `草稿已保存 · ${clockText()}` : '还没有本地改动'} · ${model.events.length} 条记录 · 约 ${kb} KB
       </div>
