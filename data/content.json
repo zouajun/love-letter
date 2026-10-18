@@ -146,6 +146,17 @@
       "images": [],
       "kind": "moment",
       "pinned": false
+    },
+    {
+      "id": "e-mvdv9kuk-72w3",
+      "date": "2026-10-23",
+      "title": "吃菠萝",
+      "text": "今天吃菠萝",
+      "images": [
+        "assets/photos/e-mvdv9kuk-72w3-1-27ewh.webp"
+      ],
+      "kind": "moment",
+      "pinned": false
     }
   ]
 }
