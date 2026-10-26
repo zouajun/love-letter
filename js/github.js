@@ -55,7 +55,8 @@ export function describeError(err) {
     return 'Token 没有写入权限：仓库设置里把 Contents 改成 Read and write';
   }
   if (status === 404) return '找不到仓库或分支，检查一下「用户名/仓库名」和分支名';
-  if (status === 409 || status === 422) return '远端刚刚有更新，刷新页面重新编辑一次';
+  if (status === 409) return '远端刚刚有更新，刷新页面重新编辑一次';
+  if (status === 422) return raw ? `提交被 GitHub 拒绝了：${raw}` : '提交被 GitHub 拒绝了，稍后再试';
   if (status === 0) return raw || '连不上 GitHub';
   return raw ? `提交失败：${raw}` : '提交失败，稍后再试';
 }
@@ -66,6 +67,10 @@ export function getRepo(token, owner, repo) {
 
 export function getBranchHead(token, owner, repo, branch) {
   return req(token, `/repos/${owner}/${repo}/git/ref/heads/${encodeURIComponent(branch)}`);
+}
+
+export function getTree(token, owner, repo, sha) {
+  return req(token, `/repos/${owner}/${repo}/git/trees/${sha}?recursive=1`);
 }
 
 export function getLatestCommitMessage(token, owner, repo, branch) {
@@ -83,9 +88,18 @@ export async function commitFiles(token, { owner, repo, branch, message, files }
   const parentSha = ref.object.sha;
   const parent = await req(token, `/repos/${owner}/${repo}/git/commits/${parentSha}`);
 
+  /* 删一个已经不存在的文件，GitHub 会回 422 GitRPC::BadObjectState，
+     所以先看清楚远端到底有哪些路径，只删真在的 */
+  let existing = null;
+  if (files.some((f) => f.remove)) {
+    const tree = await getTree(token, owner, repo, parent.tree.sha);
+    existing = new Set((tree.tree || []).filter((t) => t.type === 'blob').map((t) => t.path));
+  }
+
   const entries = [];
   for (const f of files) {
     if (f.remove) {
+      if (existing && !existing.has(f.path)) continue;
       entries.push({ path: f.path, mode: '100644', type: 'blob', sha: null });
       continue;
     }
@@ -94,6 +108,12 @@ export async function commitFiles(token, { owner, repo, branch, message, files }
       body: { content: f.base64, encoding: 'base64' }
     });
     entries.push({ path: f.path, mode: '100644', type: 'blob', sha: blob.sha });
+  }
+
+  if (!entries.length) {
+    const e = new Error('这次没有需要提交的改动');
+    e.status = -1;
+    throw e;
   }
 
   const tree = await req(token, `/repos/${owner}/${repo}/git/trees`, {
