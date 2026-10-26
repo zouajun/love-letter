@@ -377,6 +377,41 @@ body.ed-open .edit-fab { opacity: 0; pointer-events: none; }
 }
 .upload:hover { color: var(--accent-2); border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: color-mix(in srgb, var(--accent) 5%, transparent); }
 
+/* 封面 */
+.cover-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--paper) 55%, transparent);
+}
+.cover-thumb {
+  flex: none;
+  width: 108px;
+  height: 76px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #f4ece8;
+}
+.cover-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cover-thumb.is-auto {
+  display: grid;
+  place-items: center;
+  border-style: dashed;
+  border-color: var(--line-strong);
+  background: transparent;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  color: var(--muted);
+}
+.cover-side { min-width: 0; flex: 1; }
+.cover-side .row { gap: 8px; }
+.cover-side .field-note { margin: 8px 0 0; }
+
 /* ---------- 按钮 ---------- */
 .btn {
   display: inline-flex;

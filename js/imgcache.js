@@ -1,19 +1,31 @@
 /* =========================================================
    图片缓存：content.json 只存路径，本地用这份缓存直接显示
    （推送到 GitHub 之后、还没 git pull 的那段时间也不会裂图）
+   缓存只保留 1 天，过期后自动回落到真实路径
    ========================================================= */
 
 const KEY = 'loveletter.imgcache.v1';
+const TTL_MS = 24 * 60 * 60 * 1000;
 
 let mem = null;
 
 function read() {
   if (mem) return mem;
+  let raw = {};
   try {
-    mem = JSON.parse(localStorage.getItem(KEY)) || {};
+    raw = JSON.parse(localStorage.getItem(KEY)) || {};
   } catch (err) {
-    mem = {};
+    raw = {};
   }
+  const now = Date.now();
+  const alive = {};
+  for (const path of Object.keys(raw)) {
+    const item = raw[path];
+    if (item && typeof item === 'object' && typeof item.src === 'string' && now - (item.at || 0) < TTL_MS) {
+      alive[path] = item;
+    }
+  }
+  mem = alive;
   return mem;
 }
 
@@ -28,13 +40,14 @@ function write() {
 export function resolveImage(src) {
   if (!src || src.startsWith('data:') || /^(https?:)?\/\//.test(src)) return src;
   const map = read();
-  return map[src] || src;
+  const hit = map[src];
+  return hit && hit.src ? hit.src : src;
 }
 
 export function putImage(path, dataURL) {
   if (!path || !dataURL) return;
   const map = read();
-  map[path] = dataURL;
+  map[path] = { src: dataURL, at: Date.now() };
   write();
 }
 

@@ -216,6 +216,8 @@ async function boot() {
     paint({ animate: true });
     if (state.source === 'draft') {
       toast('已载入这台设备上的草稿 · 点右下角继续编辑', 3600);
+    } else if (state.expired) {
+      toast('本地草稿超过 1 天，已经丢掉，显示的是线上版本', 4200);
     }
   } catch (err) {
     console.error(err);

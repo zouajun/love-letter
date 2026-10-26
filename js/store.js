@@ -7,6 +7,15 @@ import { normalize } from './content.js';
 export const DRAFT_KEY = 'loveletter.draft.v1';
 export const CONTENT_PATH = 'data/content.json';
 
+/* 草稿只留 1 天：放太久容易和线上版本对不上，反而让人以为改动丢了 */
+export const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
+
+export function isDraftExpired(savedAt) {
+  const t = Date.parse(savedAt || '');
+  if (!Number.isFinite(t)) return true;
+  return Date.now() - t > DRAFT_TTL_MS;
+}
+
 export function readDraft() {
   try {
     const raw = window.localStorage.getItem(DRAFT_KEY);
@@ -52,14 +61,19 @@ export async function loadInitial() {
   const base = normalize(remote);
   const draft = readDraft();
   if (draft && draft.content) {
+    if (isDraftExpired(draft.savedAt)) {
+      clearDraft();
+      return { content: base, base, source: 'remote', savedAt: '', expired: true };
+    }
     return {
       content: normalize(draft.content),
       base,
       source: 'draft',
-      savedAt: typeof draft.savedAt === 'string' ? draft.savedAt : ''
+      savedAt: typeof draft.savedAt === 'string' ? draft.savedAt : '',
+      expired: false
     };
   }
-  return { content: base, base, source: 'remote', savedAt: '' };
+  return { content: base, base, source: 'remote', savedAt: '', expired: false };
 }
 
 export function toJSON(content) {

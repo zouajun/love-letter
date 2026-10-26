@@ -2,14 +2,14 @@
    编辑器：侧边抽屉，改完存本地草稿，可导出 JSON 后提交上线
    ========================================================= */
 
-import { normalize, uid, PALETTES, PALETTE_LABELS, listAutoMilestones } from './content.js';
+import { normalize, uid, PALETTES, PALETTE_LABELS, listAutoMilestones, findCover } from './content.js';
 import { toJSON, writeDraft, clearDraft } from './store.js';
 import { esc, toast, toastAction, download, applyPalette } from './ui.js';
 import { fileToCompactDataURL } from './image.js';
 import { toISO, startOfToday, fmtDot } from './date.js';
 import { loadConfig, saveConfig, pendingCount, pushToGithub } from './publish.js';
 import { describeError } from './github.js';
-import { putImage, pruneImages, allPaths } from './imgcache.js';
+import { putImage, pruneImages, allPaths, resolveImage } from './imgcache.js';
 
 const TABS = [
   { id: 'story', label: '情书' },
@@ -121,6 +121,7 @@ export function createEditor({ root, onApply }) {
 
   function storyPane() {
     const m = model;
+    const coverSrc = findCover(m);
     return `
       <div class="field">
         <label class="field-label">你们的名字</label>
@@ -169,9 +170,25 @@ export function createEditor({ root, onApply }) {
         <input class="input" data-k="vows.signature" value="${esc(m.vows.signature)}" placeholder="比如：阿远">
       </div>
       <div class="field">
+        <label class="field-label">封面图</label>
+        <div class="cover-row">
+          <div class="cover-thumb${coverSrc ? '' : ' is-auto'}">
+            ${coverSrc ? `<img src="${esc(resolveImage(coverSrc))}" alt="">` : '<span>自动</span>'}
+          </div>
+          <div class="cover-side">
+            <div class="row">
+              <button type="button" class="btn btn--sm" data-act="cover">换一张</button>
+              ${m.settings.cover ? '<button type="button" class="btn btn--ghost btn--sm" data-act="cover-auto">跟随时间轴</button>' : ''}
+            </div>
+            <p class="field-note">${m.settings.cover ? '当前是自定义封面。' : '现在用的是时间轴上最早的一张照片。'}</p>
+          </div>
+        </div>
+        <input id="edImportCover" type="file" accept="image/*" hidden data-k="cover">
+      </div>
+      <div class="field">
         <label class="field-label">封面图说明</label>
         <input class="input" data-k="settings.coverCaption" value="${esc(m.settings.coverCaption)}" placeholder="可留空">
-        <p class="field-note">封面图默认用时间轴上最早的一张照片。</p>
+        <p class="field-note">显示在照片下面那行小字。</p>
       </div>`;
   }
 
@@ -328,9 +345,7 @@ export function createEditor({ root, onApply }) {
         <label class="btn" for="edImport" style="cursor:pointer">导入 JSON</label>
       </div>
       <input id="edImport" type="file" accept="application/json,.json" hidden data-k="import">
-      <input id="edImportCover" type="file" accept="image/*" hidden data-k="cover">
-      <button type="button" class="btn" data-act="cover">更换封面图</button>
-      <p class="field-note">封面会显示在左栏那张「拍立得」上。</p>
+      <p class="field-note">不联网时的备用出口，导出的文件和仓库里的格式完全一样。</p>
 
       <div class="divider">谨慎操作</div>
       ${confirmDiscard
@@ -504,9 +519,12 @@ export function createEditor({ root, onApply }) {
 
     try {
       if (kind === 'cover') {
+        if (!files.length) return;
+        toast('正在处理封面…');
         const { src, bytes } = await fileToCompactDataURL(files[0], { maxEdge: 1200 });
         model.settings.cover = src;
         flush();
+        rerenderKeepScroll();
         toast(`封面已更新（${Math.round(bytes / 1024)} KB）`);
         return;
       }
@@ -664,6 +682,13 @@ export function createEditor({ root, onApply }) {
     if (act === 'cover') {
       const input = nodes.body.querySelector('#edImportCover');
       if (input) input.click();
+      return;
+    }
+    if (act === 'cover-auto') {
+      delete model.settings.cover;
+      flush();
+      rerenderKeepScroll();
+      toast('封面改回跟随时间轴');
       return;
     }
     if (act === 'discard') {
