@@ -1,8 +1,8 @@
 {
   "version": 1,
   "couple": {
-    "from": "俊仔",
-    "to": "曼宝",
+    "from": "小邹",
+    "to": "小林",
     "startDate": "2026-10-08",
     "place": "上饶"
   },
@@ -22,7 +22,7 @@
   },
   "settings": {
     "palette": "dusk",
-    "autoMilestones": false,
+    "autoMilestones": true,
     "milestoneDays": [
       100,
       200,
@@ -38,122 +38,41 @@
   },
   "events": [
     {
-      "id": "e-20240520",
-      "date": "2024-05-20",
-      "title": "在一起",
-      "text": "江边的长椅上，我把准备了很久的话一口气说完，中间还结巴了两次。你说「好啊」，然后把头靠了过来。那天的云是粉色的，我记得很清楚。",
-      "images": [
-        "assets/photos/sea-dusk.svg"
-      ],
-      "kind": "milestone",
-      "pinned": true
-    },
-    {
-      "id": "e-20240614",
-      "date": "2024-06-14",
-      "title": "第一次一起看电影",
-      "text": "你在我肩膀上睡着了，我全程一动不敢动，整条手臂麻到失去知觉。散场时你揉着眼睛说「真好看」，其实你根本没看到结尾。",
-      "images": [],
-      "kind": "moment",
-      "pinned": false
-    },
-    {
-      "id": "e-20240803",
-      "date": "2024-08-03",
-      "title": "第一次去看海",
-      "text": "我们坐了四个小时的车。你把脚埋进沙子里，说要把这片海存起来。后来我偷偷捡了一块石头，现在还放在书桌上。",
-      "images": [
-        "assets/photos/sea-dusk.svg",
-        "assets/photos/beach.svg"
-      ],
-      "kind": "moment",
-      "pinned": false
-    },
-    {
-      "id": "e-20241006",
-      "date": "2024-10-06",
-      "title": "第一次一起做饭",
-      "text": "番茄炒蛋咸了，米饭硬了，锅还糊了一层。我们蹲在厨房地板上笑了很久，最后叫了外卖，吃得比那顿饭香。",
-      "images": [],
-      "kind": "moment",
-      "pinned": false
-    },
-    {
-      "id": "e-20241224",
-      "date": "2024-12-24",
-      "title": "第一个平安夜",
-      "text": "窗外下着很细的雪。你围着我的围巾，长出一大截，像偷穿大人衣服的小孩。",
-      "images": [
-        "assets/photos/snow.svg"
-      ],
-      "kind": "moment",
-      "pinned": false
-    },
-    {
-      "id": "e-20250214",
-      "date": "2025-02-14",
-      "title": "第一个情人节",
-      "text": "我送你的花，你在朋友圈写了一百多个字。我截图存起来了，存在一个叫「重要」的文件夹里。",
-      "images": [
-        "assets/photos/flowers.svg"
-      ],
-      "kind": "moment",
-      "pinned": false
-    },
-    {
-      "id": "e-20250520",
-      "date": "2025-05-20",
-      "title": "一周年",
-      "text": "三百六十五天。我们把「明年也一起」这句话说得很轻，但都听清了。",
-      "images": [],
-      "kind": "milestone",
-      "pinned": false
-    },
-    {
-      "id": "e-20251001",
-      "date": "2025-10-01",
-      "title": "一起去看演唱会",
-      "text": "全场都在唱，只有你在看我。散场后人群散得很快，我们牵着手慢慢走，两公里路，一句话都没说。",
-      "images": [
-        "assets/photos/night-lights.svg"
-      ],
-      "kind": "moment",
-      "pinned": false
-    },
-    {
-      "id": "e-20260217",
-      "date": "2026-02-17",
-      "title": "终于有了「我们家」",
-      "text": "第一次一起签租房合同。你坚持要在阳台放一把椅子，说以后要在那里晒太阳。现在那把椅子归猫了。",
-      "images": [],
-      "kind": "moment",
-      "pinned": false
-    },
-    {
-      "id": "e-20260606",
-      "date": "2026-06-06",
-      "title": "你学会了写 hello world",
-      "text": "你问我为什么打印出来的是 hello world 而不是「你好世界」。我解释了十分钟，你最后说：「那它还怪国际化的。」",
-      "images": [],
-      "kind": "moment",
-      "pinned": false
-    },
-    {
       "id": "e-mvdkl72g-d4p8",
       "date": "2026-09-26",
       "title": "相识",
-      "text": "第一次相识",
+      "text": "今天小邹妈妈打电话给他说，今天晚上要去见一个女孩子，是一个小区的。",
       "images": [],
       "kind": "moment",
       "pinned": false
     },
     {
-      "id": "e-mvdv9kuk-72w3",
-      "date": "2026-10-23",
-      "title": "吃菠萝",
-      "text": "今天吃菠萝",
+      "id": "e-mvp57hvp-dqmz",
+      "date": "2026-10-08",
+      "title": "相恋",
+      "text": "",
+      "images": [],
+      "kind": "moment",
+      "pinned": false
+    },
+    {
+      "id": "e-mvp59mmw-hq5w",
+      "date": "2026-10-25",
+      "title": "第一次拼豆",
+      "text": "今天一起去拼豆，小邹拼的是蜘蛛侠，小林拼的是个卡通小女孩。小邹早早的拼完了，哈哈，小林可能有点笨，只拼了一半。无奈只能求助小邹帮忙完成剩下的。",
       "images": [
-        "assets/photos/e-mvdv9kuk-72w3-1-27ewh.webp"
+        "assets/photos/e-mvp59mmw-hq5w-1-g6qjl.webp"
+      ],
+      "kind": "moment",
+      "pinned": false
+    },
+    {
+      "id": "e-mvp5fh86-jq7b",
+      "date": "2026-09-27",
+      "title": "第一次约会",
+      "text": "小邹：\n今天是我和小林的第一次约会。我们一起去看《奥德赛》，片子足足三个小时。影院里很冷，我把外套脱下来给了小林，自己冻得瑟瑟发抖。散场之后我们去吃海鲜自助，菜品不算好。用餐时，小林给我剥了一只虾，我一时没反应过来，开口道：“放那儿吧，我自己来。”我心里记着这件事，想着之后一定要给小林剥虾。",
+      "images": [
+        "assets/photos/e-mvp5fh86-jq7b-1-k3n0h.webp"
       ],
       "kind": "moment",
       "pinned": false
