@@ -3,6 +3,7 @@
    ========================================================= */
 
 import { normalize } from './content.js';
+import { isUnlocked, readContent } from './lock.js';
 
 export const DRAFT_KEY = 'loveletter.draft.v1';
 export const CONTENT_PATH = 'data/content.json';
@@ -47,6 +48,8 @@ export function clearDraft() {
 }
 
 export async function fetchContent() {
+  /* 上了锁的版本：内容在 data/content.enc 里，用刚解开的密钥在内存里解 */
+  if (isUnlocked()) return readContent();
   const res = await fetch(`${CONTENT_PATH}?t=${Date.now()}`, { cache: 'no-cache' });
   if (!res.ok) throw new Error(`无法读取 ${CONTENT_PATH}（HTTP ${res.status}）`);
   return res.json();

@@ -76,7 +76,7 @@ export function getLatestCommitMessage(token, owner, repo, branch) {
 
 /**
  * 原子提交：所有文件合成一个 commit，中途失败不会留下半套内容。
- * files: [{ path, base64 }]
+ * files: [{ path, base64 }]，`{ path, remove: true }` 表示删掉这个文件
  */
 export async function commitFiles(token, { owner, repo, branch, message, files }) {
   const ref = await getBranchHead(token, owner, repo, branch);
@@ -85,6 +85,10 @@ export async function commitFiles(token, { owner, repo, branch, message, files }
 
   const entries = [];
   for (const f of files) {
+    if (f.remove) {
+      entries.push({ path: f.path, mode: '100644', type: 'blob', sha: null });
+      continue;
+    }
     const blob = await req(token, `/repos/${owner}/${repo}/git/blobs`, {
       method: 'POST',
       body: { content: f.base64, encoding: 'base64' }

@@ -1,0 +1,235 @@
+/* =========================================================
+   门锁：一个公开的 lock.json + 两个账号，内容全部是密文
+   口令不进任何文件，只在本地派生出解开包裹的钥匙
+   ========================================================= */
+
+import {
+  deriveKEK, importContentKey, newContentKey, unwrapKey, wrapKey,
+  encryptBytes, decryptBytes, encryptText, decryptText, toBase64, fromBase64
+} from './crypto.js';
+
+export const LOCK_PATH = 'lock.json';
+export const CONTENT_ENC = 'data/content.enc';
+export const SESSION_KEY = 'loveletter.session.v1';
+export const SESSION_DAYS = 7;
+
+const MIME_BY_EXT = {
+  webp: 'image/webp',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  svg: 'image/svg+xml',
+  avif: 'image/avif'
+};
+
+let lockDoc = null;
+let contentKey = null;      // CryptoKey
+let contentKeyRaw = null;   // Uint8Array
+let currentAccount = null;
+
+const blobURLs = new Map();   // 明文路径 → objectURL
+const blobPending = new Map(); // 明文路径 → Promise
+
+/* ---------------- lock.json ---------------- */
+
+export async function loadLock() {
+  const res = await fetch(`${LOCK_PATH}?t=${Date.now()}`, { cache: 'no-cache' });
+  if (!res.ok) throw new Error(`读不到 ${LOCK_PATH}（HTTP ${res.status}）`);
+  lockDoc = await res.json();
+  return lockDoc;
+}
+
+export function accounts() {
+  return (lockDoc && Array.isArray(lockDoc.accounts) ? lockDoc.accounts : []).map((a) => ({
+    id: a.id,
+    name: a.name || a.id,
+    hint: a.hint || ''
+  }));
+}
+
+export function isUnlocked() {
+  return !!contentKey;
+}
+
+export function currentUser() {
+  return currentAccount ? { id: currentAccount.id, name: currentAccount.name } : null;
+}
+
+/* ---------------- 解锁 / 记住设备 ---------------- */
+
+export async function unlock(accountId, password) {
+  if (!lockDoc) throw new Error('还没读到 lock.json');
+  const account = (lockDoc.accounts || []).find((a) => a.id === accountId);
+  if (!account) throw new Error('没有这个账号');
+
+  const kdf = lockDoc.kdf || {};
+  const kek = await deriveKEK(password, fromBase64(account.salt), kdf.iterations);
+  let raw;
+  try {
+    raw = await unwrapKey(kek, account.wrappedKey);
+  } catch (err) {
+    throw new Error('口令不对');
+  }
+
+  contentKeyRaw = raw;
+  contentKey = await importContentKey(raw);
+  currentAccount = { id: account.id, name: account.name || account.id };
+  blobURLs.forEach((url) => URL.revokeObjectURL(url));
+  blobURLs.clear();
+  blobPending.clear();
+  return currentAccount;
+}
+
+export function rememberSession(days = SESSION_DAYS) {
+  if (!contentKeyRaw) return;
+  const payload = {
+    account: currentAccount,
+    k: toBase64(contentKeyRaw),
+    exp: Date.now() + days * 24 * 3600 * 1000
+  };
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+  } catch (err) {
+    /* 存不下就算了，下次再输口令 */
+  }
+}
+
+export async function restoreSession() {
+  let payload = null;
+  try {
+    payload = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+  } catch (err) {
+    payload = null;
+  }
+  if (!payload || !payload.k || !payload.exp || Date.now() > payload.exp) {
+    forgetSession();
+    return null;
+  }
+  try {
+    const raw = fromBase64(payload.k);
+    contentKeyRaw = raw;
+    contentKey = await importContentKey(raw);
+    currentAccount = payload.account || null;
+    return currentAccount;
+  } catch (err) {
+    forgetSession();
+    return null;
+  }
+}
+
+export function forgetSession() {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+  } catch (err) {
+    /* 忽略 */
+  }
+  contentKey = null;
+  contentKeyRaw = null;
+  currentAccount = null;
+  blobURLs.forEach((url) => URL.revokeObjectURL(url));
+  blobURLs.clear();
+  blobPending.clear();
+}
+
+/* ---------------- 内容 ---------------- */
+
+export async function readContent() {
+  const res = await fetch(`${CONTENT_ENC}?t=${Date.now()}`, { cache: 'no-cache' });
+  if (!res.ok) throw new Error(`读不到 ${CONTENT_ENC}（HTTP ${res.status}）`);
+  const buf = new Uint8Array(await res.arrayBuffer());
+  const text = await decryptText(contentKey, buf);
+  return JSON.parse(text);
+}
+
+export async function encryptJSON(obj) {
+  return encryptBytes(contentKey, new TextEncoder().encode(JSON.stringify(obj)));
+}
+
+export async function encryptBinary(bytes) {
+  if (!contentKey) throw new Error('还没有解锁');
+  return encryptBytes(contentKey, bytes);
+}
+
+/* ---------------- 图片 ---------------- */
+
+export function securePath(path) {
+  return `${path}.enc`;
+}
+
+function mimeOf(path) {
+  const clean = String(path).split('?')[0];
+  const ext = clean.slice(clean.lastIndexOf('.') + 1).toLowerCase();
+  return MIME_BY_EXT[ext] || 'application/octet-stream';
+}
+
+/** 解密一张图，返回可直接给 <img> 的地址 */
+export function imageSrc(path) {
+  if (!path) return '';
+  if (/^(data:|blob:|https?:)/.test(path)) return path;
+  const hit = blobURLs.get(path);
+  if (hit) return hit;
+  if (blobPending.has(path)) return '';   // 正在解密，先留空
+  const job = (async () => {
+    const res = await fetch(`${securePath(path)}?t=${Date.now()}`, { cache: 'no-cache' });
+    if (!res.ok) throw new Error(`读不到 ${securePath(path)}（HTTP ${res.status}）`);
+    const plain = await decryptBytes(contentKey, new Uint8Array(await res.arrayBuffer()));
+    const url = URL.createObjectURL(new Blob([plain], { type: mimeOf(path) }));
+    blobURLs.set(path, url);
+    blobPending.delete(path);
+    return url;
+  })().catch((err) => {
+    blobPending.delete(path);
+    console.warn('图片解密失败：', path, err);
+    return '';
+  });
+  blobPending.set(path, job);
+  return '';
+}
+
+/** 已经解出来的图片，先塞进内存，省一次解密 */
+export function putImage(path, dataURL) {
+  if (!path || !dataURL) return;
+  const old = blobURLs.get(path);
+  if (old) URL.revokeObjectURL(old);
+  blobURLs.set(path, dataURL);
+}
+
+/** 把 root 里所有 data-sec 的图片解密出来 */
+export async function hydrate(root) {
+  if (!root || !contentKey) return;
+  const nodes = [...root.querySelectorAll('img[data-sec]')];
+  await Promise.all(
+    nodes.map(async (img) => {
+      const path = img.dataset.sec;
+      delete img.dataset.sec;
+      if (!path) return;
+      let url = imageSrc(path);
+      if (!url && blobPending.has(path)) url = await blobPending.get(path);
+      if (url) img.src = url;
+    })
+  );
+}
+
+/* ---------------- 改口令（以后可能会用到） ---------------- */
+
+/** 用当前的密钥 + 新口令，生成一条新的账号记录 */
+export async function makeAccountRecord(id, name, password) {
+  if (!contentKeyRaw) throw new Error('还没有解锁');
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const kek = await deriveKEK(password, salt);
+  const wrapped = await wrapKey(kek, contentKeyRaw);
+  return {
+    id,
+    name,
+    salt: toBase64(salt),
+    wrappedKey: wrapped
+  };
+}
+
+export async function sealWithNewKey(text) {
+  const raw = newContentKey();
+  const key = await importContentKey(raw);
+  const packed = await encryptText(key, text);
+  return { raw, packed };
+}

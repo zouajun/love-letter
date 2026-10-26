@@ -15,7 +15,32 @@
 <link rel="stylesheet" href="css/timeline.css">
 <link rel="stylesheet" href="css/editor.css">
 </head>
-<body data-palette="rose">
+<body data-palette="rose" class="is-locked">
+
+<!-- 门：没有口令看到的就是这一屏 -->
+<div class="gate" id="gate" hidden>
+  <form class="gate-card" id="gateForm" novalidate>
+    <p class="gate-eyebrow">PRIVATE · 只有我们俩</p>
+    <h1 class="gate-title">这封情书，是锁着的</h1>
+    <p class="gate-sub">选一下你是谁，再输入只属于你的口令。</p>
+
+    <div class="gate-accounts" id="gateAccounts"></div>
+
+    <label class="gate-field">
+      <span>口令</span>
+      <input id="gatePass" type="password" autocomplete="current-password" spellcheck="false" placeholder="……">
+    </label>
+
+    <label class="gate-remember">
+      <input id="gateRemember" type="checkbox" checked>
+      <span>在这台设备记住 7 天</span>
+    </label>
+
+    <button class="gate-submit" id="gateSubmit" type="submit">打开</button>
+    <p class="gate-error" id="gateError" role="alert"></p>
+    <p class="gate-foot">没有口令的话，这里只有一堆解不开的密文。</p>
+  </form>
+</div>
 
 <!-- 氛围层：光晕 + 纸纹 + 飘落的心 -->
 <div class="ambient" aria-hidden="true">

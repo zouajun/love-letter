@@ -1,15 +1,17 @@
 /* =========================================================
-   发布：把内联图片写成 assets/photos/*.webp，
-   content.json 里只留路径，然后一次性提交到 GitHub
+   发布：照片加密后写成 assets/photos/*.enc，
+   内容加密成 data/content.enc，然后一次性提交到 GitHub
+   （仓库里看不到任何明文，Pages 也只能拿到密文）
    ========================================================= */
 
 import { normalize } from './content.js';
-import { toJSON } from './store.js';
-import { dataURLToBytes, bytesToBase64, textToBase64, extOf } from './image.js';
+import { bytesToBase64, extOf } from './image.js';
 import { commitFiles } from './github.js';
+import { securePath, encryptBinary, encryptJSON, isUnlocked, CONTENT_ENC } from './lock.js';
+import { dataURLToBytes } from './crypto.js';
 
 const CFG_KEY = 'loveletter.publish.v1';
-const CONTENT_PATH = 'data/content.json';
+const PLAIN_CONTENT = 'data/content.json';
 const PHOTO_DIR = 'assets/photos';
 const MAX_TOTAL = 40 * 1024 * 1024;
 
@@ -68,7 +70,7 @@ function isInline(src) {
   return typeof src === 'string' && src.startsWith('data:');
 }
 
-/** 还有几张图是内联的、需要上传 */
+/** 还有几张图是刚选的、需要加密上传 */
 export function pendingCount(content) {
   let n = 0;
   for (const ev of content.events || []) {
@@ -79,10 +81,12 @@ export function pendingCount(content) {
 }
 
 /**
- * 上传内联图片 → 改写 content.json → 一个 commit 提交上去
+ * 加密照片 → 上传 → 内容加密成 content.enc → 一个 commit 提交上去
  * 返回 { content, commit, files, uploaded }
  */
 export async function pushToGithub({ config, content, message, onProgress }) {
+  if (!isUnlocked()) throw Object.assign(new Error('要先解锁才能提交'), { status: -1 });
+
   const target = parseRepo(config.repo);
   if (!target) throw Object.assign(new Error('仓库要写成「用户名/仓库名」'), { status: -1 });
   if (!config.token) throw Object.assign(new Error('还没填 Token'), { status: -1 });
@@ -102,11 +106,12 @@ export async function pushToGithub({ config, content, message, onProgress }) {
 
     const suffix = index === undefined ? '' : `${index + 1}-`;
     const path = `${PHOTO_DIR}/${slug(idHint)}-${suffix}${shortId()}.${extOf(mime)}`;
-    files.push({ path, base64: bytesToBase64(bytes) });
+    const sealed = await encryptBinary(bytes);
+    files.push({ path: securePath(path), base64: bytesToBase64(sealed) });
     uploaded.push({ path, dataURL: src });
 
     done++;
-    if (onProgress) onProgress(`正在上传照片 ${done}/${total}…`, done, total);
+    if (onProgress) onProgress(`正在加密上传照片 ${done}/${total}…`, done, total);
     return path;
   }
 
@@ -122,11 +127,13 @@ export async function pushToGithub({ config, content, message, onProgress }) {
     next.settings.cover = await handle(next.settings.cover, 'cover');
   }
 
-  if (onProgress) onProgress('正在写入 content.json…', done, total);
+  if (onProgress) onProgress('正在加密内容…', done, total);
 
   const normalized = normalize(next);
-  const json = toJSON(normalized);
-  files.push({ path: CONTENT_PATH, base64: textToBase64(json) });
+  const sealed = await encryptJSON(normalized);
+  files.push({ path: CONTENT_ENC, base64: bytesToBase64(sealed) });
+  /* 早期版本留下的明文文件，顺手删掉 */
+  files.push({ path: PLAIN_CONTENT, remove: true });
 
   const commitMessage =
     (message && String(message).trim()) ||
@@ -145,6 +152,6 @@ export async function pushToGithub({ config, content, message, onProgress }) {
     commit: commit.sha,
     files: commit.files,
     uploaded,
-    jsonBytes: json.length
+    jsonBytes: sealed.length
   };
 }

@@ -6,6 +6,18 @@ import { fmtCN, fmtMD, fmtDot, weekdayCN, diffDays, countdown, pad } from './dat
 import { findCover, findNext } from './content.js';
 import { esc, HEART_SVG } from './ui.js';
 import { resolveImage } from './imgcache.js';
+import { isUnlocked } from './lock.js';
+
+/**
+ * 图片的 src 属性。
+ * 解锁状态下先只写 data-sec，等 hydrate() 把密文解密成 blob 地址再填上去；
+ * 没上锁时（比如本地第一次打开还没生成 lock.json）就直接用原地址。
+ */
+function imgAttrs(src, eager = false) {
+  const loading = eager ? 'eager' : 'lazy';
+  if (isUnlocked()) return `data-sec="${esc(src)}" loading="${loading}" decoding="async"`;
+  return `src="${esc(resolveImage(src))}" loading="${loading}" decoding="async"`;
+}
 
 const MAX_PHOTOS = 4;
 
@@ -57,7 +69,7 @@ export function renderLeft(el, content, tl) {
     </div>
 
     ${cover ? `<figure class="polaroid">
-      <img src="${esc(resolveImage(cover))}" alt="我们的照片" loading="eager" decoding="async">
+      <img ${imgAttrs(cover, true)} alt="我们的照片">
       <figcaption>${esc(content.settings.coverCaption || '按下快门的那一刻，刚好你在笑')}</figcaption>
     </figure>` : ''}
 
@@ -84,7 +96,7 @@ function photoHTML(images, title) {
   const count = Math.min(MAX_PHOTOS, images.length);
   const figures = images.slice(0, MAX_PHOTOS).map((src, i) => `
       <figure>
-        <img src="${esc(resolveImage(src))}" alt="${esc(title)} · 照片 ${i + 1}" loading="lazy" decoding="async">
+        <img ${imgAttrs(src)} alt="${esc(title)} · 照片 ${i + 1}">
       </figure>`).join('');
   return `<div class="tl-photos" data-count="${count}">${figures}</div>`;
 }

@@ -9,7 +9,8 @@ import { fileToCompactDataURL } from './image.js';
 import { toISO, startOfToday, fmtDot } from './date.js';
 import { loadConfig, saveConfig, pendingCount, pushToGithub } from './publish.js';
 import { describeError } from './github.js';
-import { putImage, pruneImages, allPaths, resolveImage } from './imgcache.js';
+import { pruneImages, allPaths, resolveImage } from './imgcache.js';
+import { hydrate, isUnlocked, putImage as putPlainImage } from './lock.js';
 
 const TABS = [
   { id: 'story', label: '情书' },
@@ -18,6 +19,13 @@ const TABS = [
 ];
 
 const MAX_IMAGES = 4;
+
+/** 编辑器里的缩略图：解锁状态下先留 data-sec，renderPane 之后统一解密 */
+function edImg(src, alt = '') {
+  if (!src) return '';
+  if (isUnlocked()) return `<img data-sec="${esc(src)}" alt="${esc(alt)}">`;
+  return `<img src="${esc(resolveImage(src))}" alt="${esc(alt)}">`;
+}
 
 function getPath(obj, path) {
   return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
@@ -173,7 +181,7 @@ export function createEditor({ root, onApply }) {
         <label class="field-label">封面图</label>
         <div class="cover-row">
           <div class="cover-thumb${coverSrc ? '' : ' is-auto'}">
-            ${coverSrc ? `<img src="${esc(resolveImage(coverSrc))}" alt="">` : '<span>自动</span>'}
+            ${coverSrc ? edImg(coverSrc) : '<span>自动</span>'}
           </div>
           <div class="cover-side">
             <div class="row">
@@ -193,9 +201,7 @@ export function createEditor({ root, onApply }) {
   }
 
   function eventRow(ev, open) {
-    const thumb = ev.images.length
-      ? `<img src="${esc(ev.images[0])}" alt="">`
-      : '无图';
+    const thumb = ev.images.length ? edImg(ev.images[0]) : '无图';
     return `
       <div class="ev-row${open ? ' is-open' : ''}" data-id="${esc(ev.id)}" role="button" tabindex="0">
         <div class="ev-thumb">${thumb}</div>
@@ -235,7 +241,7 @@ export function createEditor({ root, onApply }) {
         <div class="field">
           <label class="field-label">照片 · ${ev.images.length}/${MAX_IMAGES}</label>
           <div class="thumbs">
-            ${ev.images.map((src, i) => `<div class="thumb"><img src="${esc(src)}" alt=""><button type="button" data-act="rmimg" data-i="${i}" aria-label="删除照片">×</button></div>`).join('')}
+            ${ev.images.map((src, i) => `<div class="thumb">${edImg(src)}<button type="button" data-act="rmimg" data-i="${i}" aria-label="删除照片">×</button></div>`).join('')}
           </div>
           ${ev.images.length < MAX_IMAGES ? `<label class="upload">＋ 添加照片<input type="file" accept="image/*" multiple hidden data-k="upload"></label>` : ''}
         </div>
@@ -311,8 +317,8 @@ export function createEditor({ root, onApply }) {
     const stateText = pushState
       ? pushState.text
       : pending
-        ? `还有 ${pending} 张照片没上传，提交时会自动转成文件`
-        : '所有照片都已经是文件了';
+        ? `还有 ${pending} 张照片没加密上传，提交时自动处理`
+        : '照片都已经加密上传了';
 
     return `
       <div class="sync-status${dirty ? '' : ' is-ok'}">
@@ -366,6 +372,8 @@ export function createEditor({ root, onApply }) {
     nodes.panel.querySelectorAll('.ed-tab').forEach((b) => {
       b.classList.toggle('is-active', b.dataset.tab === tab);
     });
+
+    hydrate(nodes.body);
   }
 
   /* ---------------- 事件处理 ---------------- */
@@ -426,7 +434,7 @@ export function createEditor({ root, onApply }) {
         onProgress: (text) => setPushState(text, 'busy')
       });
 
-      for (const item of res.uploaded) putImage(item.path, item.dataURL);
+      for (const item of res.uploaded) putPlainImage(item.path, item.dataURL);
       model = res.content;
       pruneImages(allPaths(model));
       dirty = true;

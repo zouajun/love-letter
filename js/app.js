@@ -5,15 +5,17 @@
 import { loadInitial, writeDraft } from './store.js';
 import { buildTimeline } from './content.js';
 import { renderLeft, renderRight } from './render.js';
-import { applyPalette, toast, openLightbox } from './ui.js';
+import { applyPalette, toast, openLightbox, esc } from './ui.js';
 import { createEditor } from './editor.js';
 import { countdown, pad } from './date.js';
+import { loadLock, accounts, unlock, restoreSession, rememberSession, hydrate } from './lock.js';
 
 const $ = (id) => document.getElementById(id);
 
 let content = null;
 let tl = null;
 let editor = null;
+let started = false;
 
 /* ------------------------------------------------------------------ */
 /* 渲染                                                                */
@@ -51,6 +53,8 @@ function paint({ animate = true } = {}) {
   applyPalette(content.settings.palette);
   renderLeft(lp, content, tl);
   renderRight(rp, content, tl);
+  hydrate(lp);
+  hydrate(rp);
 
   lp.scrollTop = ls;
   rp.scrollTop = rs;
@@ -65,6 +69,7 @@ function paintLeftOnly() {
   const ls = lp.scrollTop;
   renderLeft(lp, content, tl);
   lp.scrollTop = ls;
+  hydrate(lp);
 }
 
 /* ------------------------------------------------------------------ */
@@ -173,9 +178,105 @@ function errorHTML(message) {
     </div>`;
 }
 
-async function boot() {
+/* ------------------------------------------------------------------ */
+/* 登录墙                                                              */
+/* ------------------------------------------------------------------ */
+
+let gateBound = false;
+
+function showGate() {
+  const gate = $('gate');
+  if (!gate) return;
+  const app = $('app');
+  if (app) app.hidden = true;
+  gate.hidden = false;
+
+  const list = $('gateAccounts');
+  if (list && !list.dataset.ready) {
+    list.innerHTML = accounts()
+      .map((a, i) => `
+        <button type="button" class="gate-account${i === 0 ? ' is-active' : ''}" data-id="${esc(a.id)}">
+          <span class="gate-account-name">${esc(a.name)}</span>
+          ${a.hint ? `<span class="gate-account-hint">${esc(a.hint)}</span>` : ''}
+        </button>`)
+      .join('');
+    list.dataset.ready = '1';
+    list.addEventListener('click', (e) => {
+      const btn = e.target.closest('.gate-account');
+      if (!btn) return;
+      [...list.querySelectorAll('.gate-account')].forEach((b) => b.classList.toggle('is-active', b === btn));
+      const pass = $('gatePass');
+      if (pass) pass.focus();
+    });
+  }
+
+  if (!gateBound) {
+    gateBound = true;
+    $('gateForm').addEventListener('submit', onUnlock);
+  }
+
+  const pass = $('gatePass');
+  if (pass) window.setTimeout(() => pass.focus(), 150);
+}
+
+async function onUnlock(e) {
+  e.preventDefault();
+  const btn = $('gateSubmit');
+  const errBox = $('gateError');
+  const passEl = $('gatePass');
+  const active = $('gateAccounts').querySelector('.gate-account.is-active');
+  const id = active ? active.dataset.id : '';
+  const password = passEl.value;
+
+  if (!id) {
+    errBox.textContent = '先选一下你是谁';
+    return;
+  }
+  if (!password) {
+    errBox.textContent = '口令还没填';
+    return;
+  }
+
+  const label = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '正在开锁…';
+  errBox.textContent = '';
+
+  try {
+    const who = await unlock(id, password);
+    if ($('gateRemember') && $('gateRemember').checked) rememberSession();
+    passEl.value = '';
+    const gate = $('gate');
+    const app = $('app');
+    if (gate) gate.hidden = true;
+    if (app) app.hidden = false;
+    toast(`欢迎回来，${who.name}`, 2600);
+    await startApp();
+  } catch (err) {
+    errBox.textContent = err && err.message ? err.message : '打不开，再试一次';
+    passEl.value = '';
+    passEl.focus();
+    const card = document.querySelector('.gate-card');
+    if (card) {
+      card.classList.remove('is-shake');
+      void card.offsetWidth;
+      card.classList.add('is-shake');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 载入                                                                */
+/* ------------------------------------------------------------------ */
+
+async function startApp() {
+  if (started) return;
+  started = true;
+
   document.documentElement.classList.add('js-reveal');
-  spawnPetals();
 
   document.addEventListener('click', (e) => {
     const fab = e.target.closest('#editFab');
@@ -243,4 +344,31 @@ async function boot() {
   }, 1000);
 }
 
-boot();
+async function main() {
+  spawnPetals();
+
+  try {
+    await loadLock();
+  } catch (err) {
+    console.error(err);
+    const gate = $('gate');
+    if (gate) {
+      gate.hidden = false;
+      const box = $('gateError');
+      if (box) box.textContent = '读不到 lock.json，检查一下文件是不是都在。';
+    }
+    return;
+  }
+
+  const session = await restoreSession();
+  if (session) {
+    const app = $('app');
+    if (app) app.hidden = false;
+    await startApp();
+    return;
+  }
+
+  showGate();
+}
+
+main();
