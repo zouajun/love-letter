@@ -187,6 +187,7 @@ let gateBound = false;
 function showGate() {
   const gate = $('gate');
   if (!gate) return;
+  document.body.classList.add('is-locked');
   const app = $('app');
   if (app) app.hidden = true;
   gate.hidden = false;
@@ -276,6 +277,8 @@ async function startApp() {
   if (started) return;
   started = true;
 
+  /* 解锁了：把「上锁」时藏起来的编辑按钮和提示条放出来 */
+  document.body.classList.remove('is-locked');
   document.documentElement.classList.add('js-reveal');
 
   document.addEventListener('click', (e) => {
