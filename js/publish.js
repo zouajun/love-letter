@@ -7,7 +7,7 @@
 import { normalize } from './content.js';
 import { bytesToBase64, extOf } from './image.js';
 import { commitFiles } from './github.js';
-import { securePath, encryptBinary, encryptJSON, isUnlocked, CONTENT_ENC } from './lock.js';
+import { securePath, encryptBinary, encryptJSON, isUnlocked, CONTENT_ENC, lockJsonWithNames, rememberNames } from './lock.js';
 import { dataURLToBytes } from './crypto.js';
 
 const CFG_KEY = 'loveletter.publish.v1';
@@ -135,6 +135,14 @@ export async function pushToGithub({ config, content, message, onProgress }) {
   /* 早期版本留下的明文文件，顺手删掉 */
   files.push({ path: PLAIN_CONTENT, remove: true });
 
+  /* 登录页显示的名字跟着「你们的名字」走 */
+  const names = [normalized.couple.from, normalized.couple.to];
+  const lockNext = lockJsonWithNames(names);
+  if (lockNext) {
+    const lockText = `${JSON.stringify(lockNext, null, 2)}\n`;
+    files.push({ path: 'lock.json', base64: bytesToBase64(new TextEncoder().encode(lockText)) });
+  }
+
   const commitMessage =
     (message && String(message).trim()) ||
     `更新内容 · ${new Date().toLocaleString('zh-CN', { hour12: false })}`;
@@ -146,6 +154,8 @@ export async function pushToGithub({ config, content, message, onProgress }) {
     message: commitMessage,
     files
   });
+
+  rememberNames(names);
 
   return {
     content: normalized,

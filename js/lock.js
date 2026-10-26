@@ -12,6 +12,7 @@ export const LOCK_PATH = 'lock.json';
 export const CONTENT_ENC = 'data/content.enc';
 export const SESSION_KEY = 'loveletter.session.v1';
 export const SESSION_DAYS = 7;
+const NAMES_KEY = 'loveletter.names.v1';
 
 const MIME_BY_EXT = {
   webp: 'image/webp',
@@ -40,12 +41,53 @@ export async function loadLock() {
   return lockDoc;
 }
 
+/** 登录页显示的名字：优先用界面上改过的，其次才用 lock.json 里存的 */
+function nameOverrides() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(NAMES_KEY) || 'null');
+    return Array.isArray(raw) ? raw : null;
+  } catch (err) {
+    return null;
+  }
+}
+
 export function accounts() {
-  return (lockDoc && Array.isArray(lockDoc.accounts) ? lockDoc.accounts : []).map((a) => ({
+  const over = nameOverrides();
+  return (lockDoc && Array.isArray(lockDoc.accounts) ? lockDoc.accounts : []).map((a, i) => ({
     id: a.id,
-    name: a.name || a.id,
+    name: (over && over[i]) || a.name || a.id,
     hint: a.hint || ''
   }));
+}
+
+/** 界面上改了名字：先换掉登录页的显示名，发布时再写进 lock.json */
+export function rememberNames(names) {
+  const clean = (names || []).map((n) => String(n || '').trim());
+  if (!clean.some(Boolean)) return;
+  try {
+    localStorage.setItem(NAMES_KEY, JSON.stringify(clean));
+  } catch (err) {
+    /* 存不下也没关系，下次发布还会写一遍 */
+  }
+  if (currentAccount && lockDoc && Array.isArray(lockDoc.accounts)) {
+    const idx = lockDoc.accounts.findIndex((a) => a.id === currentAccount.id);
+    if (idx >= 0 && clean[idx]) currentAccount = { ...currentAccount, name: clean[idx] };
+  }
+}
+
+/** 名字和 lock.json 里不一样时，返回改过名字的 lock.json 对象 */
+export function lockJsonWithNames(names) {
+  if (!lockDoc) return null;
+  const next = JSON.parse(JSON.stringify(lockDoc));
+  let changed = false;
+  (next.accounts || []).forEach((a, i) => {
+    const name = String((names || [])[i] || '').trim();
+    if (name && name !== a.name) {
+      a.name = name;
+      changed = true;
+    }
+  });
+  return changed ? next : null;
 }
 
 export function isUnlocked() {

@@ -10,7 +10,7 @@ import { toISO, startOfToday, fmtDot } from './date.js';
 import { loadConfig, saveConfig, pendingCount, pushToGithub } from './publish.js';
 import { describeError } from './github.js';
 import { pruneImages, allPaths, resolveImage } from './imgcache.js';
-import { hydrate, isUnlocked, putImage as putPlainImage } from './lock.js';
+import { hydrate, isUnlocked, putImage as putPlainImage, rememberNames } from './lock.js';
 
 const TABS = [
   { id: 'story', label: '情书' },
@@ -499,6 +499,9 @@ export function createEditor({ root, onApply }) {
     } else {
       setPath(model, key, value);
       if (key === 'settings.palette') applyPalette(value);
+      if (key === 'couple.from' || key === 'couple.to') {
+        rememberNames([model.couple.from, model.couple.to]);
+      }
     }
     scheduleSave();
   }

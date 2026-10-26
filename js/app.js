@@ -8,7 +8,7 @@ import { renderLeft, renderRight } from './render.js';
 import { applyPalette, toast, openLightbox, esc } from './ui.js';
 import { createEditor } from './editor.js';
 import { countdown, pad } from './date.js';
-import { loadLock, accounts, unlock, restoreSession, rememberSession, hydrate } from './lock.js';
+import { loadLock, accounts, unlock, restoreSession, rememberSession, hydrate, rememberNames } from './lock.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -319,6 +319,8 @@ async function startApp() {
     content = state.content;
     paint({ animate: true });
     if (state.source === 'draft') {
+      /* 草稿里的名字也要反映到下次打开的登录页 */
+      rememberNames([content.couple.from, content.couple.to]);
       toast('已载入这台设备上的草稿 · 点右下角继续编辑', 3600);
     } else if (state.expired) {
       toast('本地草稿超过 1 天，已经丢掉，显示的是线上版本', 4200);
