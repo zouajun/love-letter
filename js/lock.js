@@ -5,8 +5,10 @@
 
 import {
   deriveKEK, importContentKey, newContentKey, unwrapKey, wrapKey,
-  encryptBytes, decryptBytes, encryptText, decryptText, toBase64, fromBase64
+  encryptBytes, decryptBytes, encryptText, decryptText, toBase64, fromBase64,
+  dataURLToBytes
 } from './crypto.js';
+import { getBlob, putBlob, clearBlobs } from './idb.js';
 
 export const LOCK_PATH = 'lock.json';
 export const CONTENT_ENC = 'data/content.enc';
@@ -172,6 +174,12 @@ export function forgetSession() {
   blobURLs.forEach((url) => URL.revokeObjectURL(url));
   blobURLs.clear();
   blobPending.clear();
+  if (observer) {
+    observer.disconnect();
+    observer = null;
+  }
+  // 钥匙没了，本地那份明文缓存也不该留着
+  void clearBlobs();
 }
 
 /* ---------------- 内容 ---------------- */
@@ -205,52 +213,122 @@ function mimeOf(path) {
   return MIME_BY_EXT[ext] || 'application/octet-stream';
 }
 
-/** 解密一张图，返回可直接给 <img> 的地址 */
+/** 1×1 透明像素：图还没解出来时先占住位置，避免破图标和 alt 文字 */
+export const BLANK_PIXEL =
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221%22 height=%221%22/%3E';
+
+/** 内存里已经解好的图，没有就返回 '' */
 export function imageSrc(path) {
   if (!path) return '';
   if (/^(data:|blob:|https?:)/.test(path)) return path;
+  return blobURLs.get(path) || '';
+}
+
+/** 内存 → 本地缓存 → 下载并解密；同一张图只会跑一次 */
+function ensureUrl(path) {
   const hit = blobURLs.get(path);
-  if (hit) return hit;
-  if (blobPending.has(path)) return '';   // 正在解密，先留空
+  if (hit) return Promise.resolve(hit);
+  const running = blobPending.get(path);
+  if (running) return running;
+
   const job = (async () => {
+    const cached = await getBlob(path);
+    if (cached) {
+      const url = URL.createObjectURL(cached);
+      blobURLs.set(path, url);
+      return url;
+    }
     const res = await fetch(`${securePath(path)}?t=${Date.now()}`, { cache: 'no-cache' });
     if (!res.ok) throw new Error(`读不到 ${securePath(path)}（HTTP ${res.status}）`);
     const plain = await decryptBytes(contentKey, new Uint8Array(await res.arrayBuffer()));
-    const url = URL.createObjectURL(new Blob([plain], { type: mimeOf(path) }));
+    const blob = new Blob([plain], { type: mimeOf(path) });
+    const url = URL.createObjectURL(blob);
     blobURLs.set(path, url);
-    blobPending.delete(path);
+    void putBlob(path, blob);
     return url;
-  })().catch((err) => {
-    blobPending.delete(path);
-    console.warn('图片解密失败：', path, err);
-    return '';
-  });
+  })().finally(() => blobPending.delete(path));
+
   blobPending.set(path, job);
-  return '';
+  return job;
 }
 
-/** 已经解出来的图片，先塞进内存，省一次解密 */
+/* ---------- 懒解密：滚到附近才开始下载、解密 ---------- */
+
+const DEVELOP_HOST = 'figure, .thumb';
+let observer = null;
+
+function getObserver() {
+  if (observer) return observer;
+  if (typeof IntersectionObserver === 'undefined') return null;
+  observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        observer.unobserve(entry.target);
+        void reveal(entry.target);
+      }
+    },
+    { rootMargin: '520px 0px', threshold: 0.01 }
+  );
+  return observer;
+}
+
+/** 把一张图解密并淡入 */
+async function reveal(img) {
+  if (!img.isConnected || !img.dataset.sec) return;
+  const path = img.dataset.sec;
+  delete img.dataset.sec;
+  const host = img.closest(DEVELOP_HOST);
+
+  const settle = (ok) => {
+    img.classList.remove('is-pending');
+    img.classList.add(ok ? 'is-loaded' : 'is-broken');
+    if (host) setTimeout(() => host.classList.remove('is-developing'), ok ? 620 : 0);
+  };
+
+  try {
+    const url = await ensureUrl(path);
+    if (!img.isConnected) return;
+    img.addEventListener('load', () => settle(true), { once: true });
+    img.addEventListener('error', () => settle(false), { once: true });
+    img.src = url;
+    if (img.complete && img.naturalWidth > 0) settle(true);
+  } catch (err) {
+    settle(false);
+    console.warn('图片解密失败：', path, err);
+  }
+}
+
+/** 给 root 里还没解密的图挂上观察；真到视口附近才去下载和解密 */
+export function hydrate(root) {
+  if (!root || !contentKey) return;
+  const imgs = root.querySelectorAll('img[data-sec]');
+  if (!imgs.length) return;
+
+  const io = getObserver();
+  for (const img of imgs) {
+    if (img.dataset.watch) continue;
+    img.dataset.watch = '1';
+    if (!img.classList.contains('is-loaded')) img.classList.add('is-pending');
+    const host = img.closest(DEVELOP_HOST);
+    if (host) host.classList.add('is-developing');
+    if (io) io.observe(img);
+    else void reveal(img);
+  }
+}
+
+/** 已经解出来的图片，先塞进内存和本地缓存，省一次解密 */
 export function putImage(path, dataURL) {
   if (!path || !dataURL) return;
   const old = blobURLs.get(path);
-  if (old) URL.revokeObjectURL(old);
+  if (old && old !== dataURL) URL.revokeObjectURL(old);
   blobURLs.set(path, dataURL);
-}
-
-/** 把 root 里所有 data-sec 的图片解密出来 */
-export async function hydrate(root) {
-  if (!root || !contentKey) return;
-  const nodes = [...root.querySelectorAll('img[data-sec]')];
-  await Promise.all(
-    nodes.map(async (img) => {
-      const path = img.dataset.sec;
-      delete img.dataset.sec;
-      if (!path) return;
-      let url = imageSrc(path);
-      if (!url && blobPending.has(path)) url = await blobPending.get(path);
-      if (url) img.src = url;
-    })
-  );
+  try {
+    const { bytes, mime } = dataURLToBytes(dataURL);
+    void putBlob(path, new Blob([bytes], { type: mime || mimeOf(path) }));
+  } catch (err) {
+    /* 格式认不出来就不缓存，不影响显示 */
+  }
 }
 
 /* ---------------- 改口令（以后可能会用到） ---------------- */

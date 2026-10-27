@@ -10,7 +10,7 @@ import { toISO, startOfToday, fmtDot } from './date.js';
 import { loadConfig, saveConfig, pendingCount, pushToGithub } from './publish.js';
 import { describeError } from './github.js';
 import { pruneImages, allPaths, resolveImage } from './imgcache.js';
-import { hydrate, isUnlocked, putImage as putPlainImage, rememberNames } from './lock.js';
+import { hydrate, isUnlocked, putImage as putPlainImage, rememberNames, BLANK_PIXEL } from './lock.js';
 
 const TABS = [
   { id: 'story', label: '情书' },
@@ -20,10 +20,12 @@ const TABS = [
 
 const MAX_IMAGES = 4;
 
-/** 编辑器里的缩略图：解锁状态下先留 data-sec，renderPane 之后统一解密 */
+/** 编辑器里的缩略图：解锁状态下先占位，renderPane 之后按需解密 */
 function edImg(src, alt = '') {
   if (!src) return '';
-  if (isUnlocked()) return `<img data-sec="${esc(src)}" alt="${esc(alt)}">`;
+  if (isUnlocked()) {
+    return `<img src="${BLANK_PIXEL}" data-sec="${esc(src)}" class="is-pending" alt="${esc(alt)}">`;
+  }
   return `<img src="${esc(resolveImage(src))}" alt="${esc(alt)}">`;
 }
 

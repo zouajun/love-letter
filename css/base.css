@@ -948,3 +948,36 @@ body.is-locked #toastRoot { display: none !important; }
   .gate-accounts { flex-direction: column; }
 }
 
+
+/* ---------- 解密中的图片：先占位，解好了再淡入 ---------- */
+img.is-pending { opacity: 0; }
+img.is-loaded { opacity: 1; transition: opacity .5s ease; }
+img.is-broken { opacity: 0; }
+
+figure.is-developing,
+.thumb.is-developing { position: relative; }
+
+figure.is-developing::after,
+.thumb.is-developing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg,
+    transparent 25%,
+    color-mix(in srgb, var(--paper) 78%, transparent) 50%,
+    transparent 75%);
+  background-size: 220% 100%;
+  animation: img-develop 1.7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes img-develop {
+  from { background-position: 130% 0; }
+  to { background-position: -30% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  figure.is-developing::after,
+  .thumb.is-developing::after { animation: none; }
+  img.is-loaded { transition: none; }
+}
