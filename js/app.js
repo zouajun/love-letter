@@ -8,7 +8,7 @@ import { renderLeft, renderRight } from './render.js';
 import { applyPalette, toast, openLightbox, esc } from './ui.js';
 import { createEditor } from './editor.js';
 import { countdown, pad } from './date.js';
-import { loadLock, accounts, unlock, restoreSession, rememberSession, hydrate, rememberNames, currentUser } from './lock.js';
+import { loadLock, accounts, unlock, restoreSession, rememberSession, hydrate, rememberNames, currentUser, forgetSession } from './lock.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -39,6 +39,70 @@ function letterView() {
     letter: letterFor(content.letters, my),
     author: names[other] || (list[other] && list[other].name) || ''
   };
+}
+
+/* ------------------------------------------------------------------ */
+/* 左上角：当前登录的人                                                */
+/* ------------------------------------------------------------------ */
+
+/** 取名字里最后一个字做头像，两个人的头像才不会都是「小」 */
+function avatarChar(name) {
+  const chars = [...String(name || '').trim()];
+  return chars.length ? chars[chars.length - 1] : '❤';
+}
+
+function closeUserMenu() {
+  const menu = $('userMenu');
+  const chip = $('userChip');
+  if (!menu || menu.hidden) return;
+  menu.hidden = true;
+  if (chip) chip.setAttribute('aria-expanded', 'false');
+}
+
+function renderUserDock() {
+  const dock = $('userDock');
+  const me = currentUser();
+  if (!dock) return;
+  if (!me) {
+    dock.hidden = true;
+    return;
+  }
+  const idx = myIndex();
+  dock.innerHTML = `
+    <button type="button" class="user-chip" id="userChip" aria-haspopup="true" aria-expanded="false" title="账号">
+      <span class="user-avatar${idx === 1 ? ' is-alt' : ''}" aria-hidden="true">${esc(avatarChar(me.name))}</span>
+      <span class="user-name">${esc(me.name)}</span>
+      <svg class="user-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="user-menu" id="userMenu" hidden>
+      <p class="user-menu-head">当前登录 · <b>${esc(me.name)}</b></p>
+      <button type="button" class="user-menu-item" data-act="logout" role="menuitem">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 17l5-5-5-5"/><path d="M20 12H9"/><path d="M12 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/></svg>
+        退出登录
+      </button>
+    </div>`;
+  dock.hidden = false;
+
+  const chip = $('userChip');
+  chip.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const menu = $('userMenu');
+    if (!menu) return;
+    const open = menu.hidden;
+    menu.hidden = !open;
+    chip.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  $('userMenu').addEventListener('click', (e) => {
+    if (!e.target.closest('[data-act="logout"]')) return;
+    logout();
+  });
+}
+
+function logout() {
+  closeUserMenu();
+  forgetSession();
+  location.reload();
 }
 
 /* ------------------------------------------------------------------ */
@@ -306,8 +370,11 @@ async function startApp() {
   /* 解锁了：把「上锁」时藏起来的编辑按钮和提示条放出来 */
   document.body.classList.remove('is-locked');
   document.documentElement.classList.add('js-reveal');
+  renderUserDock();
 
   document.addEventListener('click', (e) => {
+    if (!e.target.closest('#userDock')) closeUserMenu();
+
     const writemine = e.target.closest('[data-act="write-mine"]');
     if (writemine) {
       openEditor('story');
@@ -332,6 +399,7 @@ async function startApp() {
   });
 
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeUserMenu();
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
       e.preventDefault();
       openEditor();

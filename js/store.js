@@ -3,10 +3,34 @@
    ========================================================= */
 
 import { normalize } from './content.js';
-import { isUnlocked, readContent } from './lock.js';
+import { isUnlocked, readContent, currentUser } from './lock.js';
 
 export const DRAFT_KEY = 'loveletter.draft.v1';
 export const CONTENT_PATH = 'data/content.json';
+
+/* 草稿跟着账号走：两个人共用一台设备时，不会把对方没发出去的改动套到自己头上 */
+function draftKey() {
+  const me = currentUser();
+  return me ? `${DRAFT_KEY}.${me.id}` : DRAFT_KEY;
+}
+
+/* 旧版本只有一个全局草稿：谁先登录就归谁，认领一次之后不再重复 */
+const DRAFT_OWNER_KEY = 'loveletter.draft.owner';
+
+function adoptLegacyDraft() {
+  try {
+    const me = currentUser();
+    if (!me) return;
+    if (window.localStorage.getItem(DRAFT_OWNER_KEY)) return;
+    const legacy = window.localStorage.getItem(DRAFT_KEY);
+    if (!legacy) return;
+    window.localStorage.setItem(`${DRAFT_KEY}.${me.id}`, legacy);
+    window.localStorage.setItem(DRAFT_OWNER_KEY, me.id);
+    window.localStorage.removeItem(DRAFT_KEY);
+  } catch (err) {
+    /* 认领失败就当没有旧草稿 */
+  }
+}
 
 /* 草稿只留 1 天：放太久容易和线上版本对不上，反而让人以为改动丢了 */
 export const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
@@ -18,8 +42,9 @@ export function isDraftExpired(savedAt) {
 }
 
 export function readDraft() {
+  adoptLegacyDraft();
   try {
-    const raw = window.localStorage.getItem(DRAFT_KEY);
+    const raw = window.localStorage.getItem(draftKey());
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || !parsed.content) return null;
@@ -32,7 +57,7 @@ export function readDraft() {
 export function writeDraft(content, extra = {}) {
   const payload = Object.assign({ savedAt: new Date().toISOString(), content }, extra);
   try {
-    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+    window.localStorage.setItem(draftKey(), JSON.stringify(payload));
   } catch (err) {
     throw new Error('浏览器本地存储满了（图片太多）。可以先导出备份，再删掉一些图片。');
   }
@@ -41,7 +66,7 @@ export function writeDraft(content, extra = {}) {
 
 export function clearDraft() {
   try {
-    window.localStorage.removeItem(DRAFT_KEY);
+    window.localStorage.removeItem(draftKey());
   } catch (err) {
     /* 忽略 */
   }

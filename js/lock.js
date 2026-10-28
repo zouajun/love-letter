@@ -97,7 +97,11 @@ export function isUnlocked() {
 }
 
 export function currentUser() {
-  return currentAccount ? { id: currentAccount.id, name: currentAccount.name } : null;
+  if (!currentAccount) return null;
+  /* 名字可能被改过（存在 localStorage），对外一律用最新的那个 */
+  const list = accounts();
+  const hit = list.find((a) => a.id === currentAccount.id);
+  return { id: currentAccount.id, name: (hit && hit.name) || currentAccount.name };
 }
 
 /* ---------------- 解锁 / 记住设备 ---------------- */
