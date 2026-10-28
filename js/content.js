@@ -30,6 +30,57 @@ export function clone(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
 
+/* ------------------------------------------------------------------ */
+/* 信：两个人的各一封                                                  */
+/* ------------------------------------------------------------------ */
+
+export const LETTER_IDS = [0, 1];
+
+/** 一封空信：只是还没写，不是坏数据 */
+export function emptyLetter() {
+  return {
+    eyebrow: 'A LOVE LETTER, WRITTEN IN CODE',
+    title: '写给你的情书',
+    subtitle: '',
+    paragraphs: [],
+    signature: ''
+  };
+}
+
+/** 正文为空 = 这封还没写 */
+export function isBlankLetter(letter) {
+  return !letter || !Array.isArray(letter.paragraphs) || letter.paragraphs.length === 0;
+}
+
+/** 我登录时看到的是对方写的那封：索引 0 / 1 互为对方 */
+export function letterFor(letters, myIndex) {
+  const other = myIndex === 0 ? 1 : 0;
+  const list = Array.isArray(letters) ? letters : [];
+  return list[other] || emptyLetter();
+}
+
+function paragraphsOf(src) {
+  if (Array.isArray(src.paragraphs)) {
+    return src.paragraphs.map((p) => str(p).trim()).filter(Boolean);
+  }
+  if (typeof src.text === 'string') {
+    return src.text.split(/\n{2,}/).map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function normalizeLetter(raw) {
+  const src = raw && typeof raw === 'object' ? raw : {};
+  const base = emptyLetter();
+  return {
+    eyebrow: str(src.eyebrow).trim() || base.eyebrow,
+    title: str(src.title).trim() || base.title,
+    subtitle: str(src.subtitle).trim(),
+    paragraphs: paragraphsOf(src),
+    signature: str(src.signature).trim()
+  };
+}
+
 /** 把任意外部数据整理成安全、完整的结构 */
 export function normalize(raw) {
   const src = raw && typeof raw === 'object' ? raw : {};
@@ -39,11 +90,14 @@ export function normalize(raw) {
 
   const start = parseDate(couple.startDate) || startOfToday();
 
-  let paragraphs = [];
-  if (Array.isArray(vows.paragraphs)) {
-    paragraphs = vows.paragraphs.map((p) => str(p).trim()).filter(Boolean);
-  } else if (typeof vows.text === 'string') {
-    paragraphs = vows.text.split(/\n{2,}/).map((s) => s.trim()).filter(Boolean);
+  /* 旧数据只有一封 vows；升级后把它当成「第一个账号写的」那封 */
+  let letters;
+  if (Array.isArray(src.letters) && src.letters.length) {
+    letters = [normalizeLetter(src.letters[0]), normalizeLetter(src.letters[1])];
+  } else if (Object.keys(vows).length || paragraphsOf(vows).length) {
+    letters = [normalizeLetter(vows), normalizeLetter(null)];
+  } else {
+    letters = [normalizeLetter(null), normalizeLetter(null)];
   }
 
   const rawEvents = Array.isArray(src.events) ? src.events : [];
@@ -84,14 +138,7 @@ export function normalize(raw) {
       startDate: toISO(start),
       place: str(couple.place).trim()
     },
-    vows: {
-      eyebrow: str(vows.eyebrow).trim() || 'A LOVE LETTER, WRITTEN IN CODE',
-      title: str(vows.title).trim() || '写给你的情书',
-      subtitle: str(vows.subtitle).trim(),
-      paragraphs,
-      signature: str(vows.signature).trim(),
-      footer: str(vows.footer).trim()
-    },
+    letters,
     settings: {
       palette: PALETTES.includes(settings.palette) ? settings.palette : 'rose',
       autoMilestones: settings.autoMilestones !== false,

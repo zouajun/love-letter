@@ -2,7 +2,7 @@
    编辑器：侧边抽屉，改完存本地草稿，可导出 JSON 后提交上线
    ========================================================= */
 
-import { normalize, uid, PALETTES, PALETTE_LABELS, listAutoMilestones, findCover } from './content.js';
+import { normalize, uid, PALETTES, PALETTE_LABELS, listAutoMilestones, findCover, emptyLetter } from './content.js';
 import { toJSON, writeDraft, clearDraft } from './store.js';
 import { esc, toast, toastAction, download, applyPalette } from './ui.js';
 import { fileToCompactDataURL } from './image.js';
@@ -10,7 +10,7 @@ import { toISO, startOfToday, fmtDot } from './date.js';
 import { loadConfig, saveConfig, pendingCount, pushToGithub } from './publish.js';
 import { describeError } from './github.js';
 import { pruneImages, allPaths, resolveImage } from './imgcache.js';
-import { hydrate, isUnlocked, putImage as putPlainImage, rememberNames, BLANK_PIXEL } from './lock.js';
+import { hydrate, isUnlocked, putImage as putPlainImage, rememberNames, BLANK_PIXEL, accounts, currentUser } from './lock.js';
 
 const TABS = [
   { id: 'story', label: '情书' },
@@ -47,6 +47,14 @@ function setPath(obj, path, value) {
 function clockText() {
   const d = new Date();
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+}
+
+/** 当前登录账号在 accounts() 里的序号，决定编辑器改的是「我写的哪一封」 */
+function myIndex() {
+  const list = accounts();
+  const me = currentUser();
+  const i = list.findIndex((a) => me && a.id === me.id);
+  return i < 0 ? 0 : i;
 }
 
 export function createEditor({ root, onApply }) {
@@ -132,6 +140,13 @@ export function createEditor({ root, onApply }) {
   function storyPane() {
     const m = model;
     const coverSrc = findCover(m);
+    const me = myIndex();
+    const other = me === 0 ? 1 : 0;
+    const letter = (Array.isArray(m.letters) && m.letters[me]) || emptyLetter();
+    const names = [m.couple.from, m.couple.to];
+    const mine = names[me] || '我';
+    const partner = names[other] || 'TA';
+    const k = (field) => `letters.${me}.${field}`;
     return `
       <div class="field">
         <label class="field-label">你们的名字</label>
@@ -156,28 +171,31 @@ export function createEditor({ root, onApply }) {
         </select>
       </div>
 
-      <div class="divider">誓言</div>
+      <div class="divider">你写的这封</div>
+      <p class="field-note" style="margin:-6px 0 16px">
+        这一封是给 ${esc(partner)} 的，TA 登录时才会显示在左边。你现在看到的是 TA 写给你的那封。
+      </p>
 
       <div class="field">
         <label class="field-label">顶部小字</label>
-        <input class="input" data-k="vows.eyebrow" value="${esc(m.vows.eyebrow)}">
+        <input class="input" data-k="${k('eyebrow')}" value="${esc(letter.eyebrow)}">
       </div>
       <div class="field">
         <label class="field-label">标题</label>
-        <input class="input" data-k="vows.title" value="${esc(m.vows.title)}">
+        <input class="input" data-k="${k('title')}" value="${esc(letter.title)}">
       </div>
       <div class="field">
         <label class="field-label">副标题</label>
-        <input class="input" data-k="vows.subtitle" value="${esc(m.vows.subtitle)}" placeholder="可留空">
+        <input class="input" data-k="${k('subtitle')}" value="${esc(letter.subtitle)}" placeholder="可留空">
       </div>
       <div class="field">
         <label class="field-label">正文</label>
-        <textarea class="textarea textarea--tall" data-k="vows.paragraphs" placeholder="空一行 = 新的一段">${esc(m.vows.paragraphs.join('\n\n'))}</textarea>
+        <textarea class="textarea textarea--tall" data-k="${k('paragraphs')}" placeholder="空一行 = 新的一段">${esc(letter.paragraphs.join('\n\n'))}</textarea>
         <p class="field-note">空一行分段，每一段都会单独淡入。</p>
       </div>
       <div class="field">
         <label class="field-label">署名</label>
-        <input class="input" data-k="vows.signature" value="${esc(m.vows.signature)}" placeholder="比如：阿远">
+        <input class="input" data-k="${k('signature')}" value="${esc(letter.signature)}" placeholder="比如：${esc(mine)}">
       </div>
       <div class="field">
         <label class="field-label">封面图</label>
@@ -487,7 +505,7 @@ export function createEditor({ root, onApply }) {
     if (el.type === 'number') value = Number(value) || 0;
     else if (el.type === 'checkbox') value = el.checked;
 
-    if (key === 'vows.paragraphs') {
+    if (key.startsWith('letters.') && key.endsWith('.paragraphs')) {
       value = value.split(/\n{2,}/).map((s) => s.trim()).filter(Boolean);
     } else if (key === 'settings.milestoneDays') {
       value = value.split(/[,，\s]+/).map((n) => Number(n)).filter((n) => Number.isFinite(n) && n >= 2 && n < 100000);
@@ -743,9 +761,9 @@ export function createEditor({ root, onApply }) {
 
   /* ---------------- 开关 ---------------- */
 
-  function open(content) {
+  function open(content, which = 'story') {
     model = normalize(content);
-    tab = 'story';
+    tab = TABS.some((t) => t.id === which) ? which : 'story';
     openId = null;
     pendingDelete = null;
     confirmDiscard = false;

@@ -32,11 +32,16 @@ function uptimeText(start, now) {
 /* 左栏                                                                */
 /* ------------------------------------------------------------------ */
 
-export function renderLeft(el, content, tl) {
+export function renderLeft(el, content, tl, letter, author) {
   const cover = findCover(content);
   const next = findNext(tl.items, tl.today);
-  const { couple, vows } = content;
+  const { couple } = content;
   const now = new Date();
+  const l = letter && typeof letter === 'object' ? letter : {};
+  const paragraphsArr = Array.isArray(l.paragraphs) ? l.paragraphs : [];
+  const blank = paragraphsArr.length === 0;
+  const eyebrow = l.eyebrow || 'A LOVE LETTER, WRITTEN IN CODE';
+  const from = author || '';
 
   const headSub = [couple.place, `${fmtCN(tl.start)} 开始`].filter(Boolean).join(' · ');
 
@@ -51,13 +56,41 @@ export function renderLeft(el, content, tl) {
        <div class="next-bar"><i style="width:0%"></i></div>
        <p class="next-cd">还没有安排下一个纪念日</p>`;
 
-  const paragraphs = vows.paragraphs
+  const paragraphs = paragraphsArr
     .map((p, i) => `<p style="--i:${i}">${esc(p)}</p>`)
     .join('');
 
+  const fromLine = from
+    ? `<p class="letter-from"><span class="letter-from-dot" aria-hidden="true"></span>来自 ${esc(from)}</p>`
+    : '';
+
+  const footHTML = `
+      <div class="letter-foot">
+        <code>uptime ${esc(uptimeText(tl.start, now))}</code>
+        <span>·</span>
+        <span>每一行都是真的</span>
+      </div>`;
+
+  const letterHTML = blank
+    ? `<article class="letter letter--empty">
+      ${fromLine}
+      <h2 class="letter-title">这封还没写</h2>
+      <p class="letter-sub">等 TA 写下来，这里就会换成那封信。</p>
+      <button type="button" class="btn btn--primary btn--sm letter-cta" data-act="write-mine">写我这封</button>
+      ${footHTML}
+    </article>`
+    : `<article class="letter">
+      ${fromLine}
+      <h2 class="letter-title">${esc(l.title || '写给你的情书')}</h2>
+      ${l.subtitle ? `<p class="letter-sub">${esc(l.subtitle)}</p>` : ''}
+      <div class="letter-body">${paragraphs}</div>
+      ${l.signature ? `<p class="letter-sign">—— ${esc(l.signature)}<span class="caret"></span></p>` : ''}
+      ${footHTML}
+    </article>`;
+
   el.innerHTML = `
     <div class="letter-head">
-      <p class="eyebrow">${esc(vows.eyebrow)}</p>
+      <p class="eyebrow">${esc(eyebrow)}</p>
       <h1 class="names">${esc(couple.from)} ${HEART_SVG} ${esc(couple.to)}</h1>
       <p class="head-sub">${esc(headSub)}</p>
     </div>
@@ -75,17 +108,7 @@ export function renderLeft(el, content, tl) {
       <figcaption>${esc(content.settings.coverCaption || '按下快门的那一刻，刚好你在笑')}</figcaption>
     </figure>` : ''}
 
-    <article class="letter">
-      <h2 class="letter-title">${esc(vows.title)}</h2>
-      ${vows.subtitle ? `<p class="letter-sub">${esc(vows.subtitle)}</p>` : ''}
-      <div class="letter-body">${paragraphs}</div>
-      ${vows.signature ? `<p class="letter-sign">—— ${esc(vows.signature)}<span class="caret"></span></p>` : ''}
-      <div class="letter-foot">
-        <code>uptime ${esc(uptimeText(tl.start, now))}</code>
-        <span>·</span>
-        <span>每一行都是真的</span>
-      </div>
-    </article>
+    ${letterHTML}
   `;
 }
 

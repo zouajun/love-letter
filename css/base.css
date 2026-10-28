@@ -249,7 +249,6 @@ body[data-palette="dusk"] .aura-c { background: radial-gradient(circle at 50% 50
 
 /* ---------- 左栏：开场 ---------- */
 .letter-head { margin-bottom: 26px; }
-
 .names {
   margin: 0;
   display: flex;
@@ -458,6 +457,27 @@ body[data-palette="dusk"] .aura-c { background: radial-gradient(circle at 50% 50
   margin-top: 14px;
   background: color-mix(in srgb, var(--accent) 34%, transparent);
 }
+
+.letter-from {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 12px;
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: .14em;
+  color: var(--muted);
+}
+.letter-from-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+.letter--empty .letter-title { color: color-mix(in srgb, var(--ink) 62%, var(--muted)); }
+.letter--empty .letter-sub { margin-bottom: 16px; }
+.letter-cta { margin: 2px 0 8px; }
 
 .letter-body p {
   margin: 0 0 15px;

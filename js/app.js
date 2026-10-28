@@ -3,12 +3,12 @@
    ========================================================= */
 
 import { loadInitial, writeDraft } from './store.js';
-import { buildTimeline } from './content.js';
+import { buildTimeline, letterFor } from './content.js';
 import { renderLeft, renderRight } from './render.js';
 import { applyPalette, toast, openLightbox, esc } from './ui.js';
 import { createEditor } from './editor.js';
 import { countdown, pad } from './date.js';
-import { loadLock, accounts, unlock, restoreSession, rememberSession, hydrate, rememberNames } from './lock.js';
+import { loadLock, accounts, unlock, restoreSession, rememberSession, hydrate, rememberNames, currentUser } from './lock.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -16,6 +16,30 @@ let content = null;
 let tl = null;
 let editor = null;
 let started = false;
+
+/* ------------------------------------------------------------------ */
+/* 我是谁：登录的账号在 accounts() 里的序号                             */
+/* ------------------------------------------------------------------ */
+
+function myIndex() {
+  const list = accounts();
+  const me = currentUser();
+  const i = list.findIndex((a) => me && a.id === me.id);
+  return i < 0 ? 0 : i;
+}
+
+/** 左栏要显示的是「对方写的那封」 */
+function letterView() {
+  if (!content) return { letter: null, author: '' };
+  const my = myIndex();
+  const other = my === 0 ? 1 : 0;
+  const names = [content.couple.from, content.couple.to];
+  const list = accounts();
+  return {
+    letter: letterFor(content.letters, my),
+    author: names[other] || (list[other] && list[other].name) || ''
+  };
+}
 
 /* ------------------------------------------------------------------ */
 /* 渲染                                                                */
@@ -51,7 +75,8 @@ function paint({ animate = true } = {}) {
 
   tl = buildTimeline(content);
   applyPalette(content.settings.palette);
-  renderLeft(lp, content, tl);
+  const view = letterView();
+  renderLeft(lp, content, tl, view.letter, view.author);
   renderRight(rp, content, tl);
   hydrate(lp);
   hydrate(rp);
@@ -67,7 +92,8 @@ function paintLeftOnly() {
   if (!content) return;
   const lp = $('leftPane');
   const ls = lp.scrollTop;
-  renderLeft(lp, content, tl);
+  const view = letterView();
+  renderLeft(lp, content, tl, view.letter, view.author);
   lp.scrollTop = ls;
   hydrate(lp);
 }
@@ -139,7 +165,7 @@ function spawnPetals() {
 /* 编辑器                                                              */
 /* ------------------------------------------------------------------ */
 
-function openEditor() {
+function openEditor(tab = 'story') {
   if (!content) {
     toast('内容还在路上，稍等一下');
     return;
@@ -154,7 +180,7 @@ function openEditor() {
       }
     });
   }
-  editor.open(content);
+  editor.open(content, tab);
 }
 
 /* ------------------------------------------------------------------ */
@@ -282,6 +308,12 @@ async function startApp() {
   document.documentElement.classList.add('js-reveal');
 
   document.addEventListener('click', (e) => {
+    const writemine = e.target.closest('[data-act="write-mine"]');
+    if (writemine) {
+      openEditor('story');
+      return;
+    }
+
     const fab = e.target.closest('#editFab');
     if (fab) {
       openEditor();
