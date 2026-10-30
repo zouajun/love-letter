@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>这封情书怎么用 · 给你的小说明</title>
+<style>
+  :root {
+    --bg: #fdf6f1;
+    --card: #fffaf6;
+    --ink: #432f35;
+    --ink-2: #61474e;
+    --muted: #9c8289;
+    --accent: #b9556b;
+    --accent-soft: #f6e3e7;
+    --gold: #b98a3e;
+    --gold-soft: #fbf0dc;
+    --line: rgba(185, 85, 107, .16);
+    --line-strong: rgba(185, 85, 107, .28);
+    --serif: "Songti SC", "STSong", "SimSun", "Noto Serif SC", serif;
+    --kai: "Kaiti SC", "KaiTi", "STKaiti", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    padding: 28px 18px 64px;
+    background:
+      radial-gradient(900px 520px at 12% -8%, #fbe6e8 0%, rgba(251, 230, 232, 0) 62%),
+      radial-gradient(820px 480px at 96% 4%, #fdf0e3 0%, rgba(253, 240, 227, 0) 58%),
+      var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.85;
+    letter-spacing: .01em;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 720px; margin: 0 auto; }
+
+  /* ---------- 头部 ---------- */
+  .head { margin-bottom: 26px; }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .eyebrow::before {
+    content: "";
+    width: 26px;
+    height: 1px;
+    background: var(--line-strong);
+  }
+
+  h1 {
+    margin: 0 0 10px;
+    font-family: var(--serif);
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    line-height: 1.35;
+  }
+
+  .lede {
+    margin: 0;
+    font-family: var(--kai);
+    font-size: 16px;
+    line-height: 1.9;
+    color: var(--ink-2);
+  }
+
+  /* ---------- 通用卡片 ---------- */
+  .card {
+    margin: 0 0 16px;
+    padding: 20px 20px 18px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--card);
+    box-shadow: 0 18px 40px -34px rgba(120, 60, 72, .55);
+  }
+
+  h2 {
+    margin: 0 0 14px;
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    line-height: 1.5;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  h2 .num {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-family: var(--serif);
+    font-size: 13px;
+    letter-spacing: 0;
+    transform: translateY(1px);
+  }
+
+  h3 {
+    margin: 20px 0 6px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--ink);
+  }
+  h3:first-of-type { margin-top: 4px; }
+
+  p { margin: 0 0 10px; }
+  p:last-child { margin-bottom: 0; }
+
+  ol, ul { margin: 0 0 10px; padding-left: 20px; }
+  li { margin-bottom: 4px; }
+  li:last-child { margin-bottom: 0; }
+
+  strong { font-weight: 600; color: var(--ink); }
+
+  a { color: var(--accent); text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
+
+  /* 界面上的按钮 / 文字 */
+  .ui {
+    display: inline-block;
+    padding: 1px 9px;
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    background: #fff;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .ui--ghost { color: var(--ink-2); }
+
+  kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    border: 1px solid var(--line);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    background: #fff;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: #fff;
+    border: 1px solid var(--line);
+  }
+
+  /* ---------- 提示块 ---------- */
+  .tip {
+    margin: 14px 0 0;
+    padding: 12px 14px;
+    border-radius: 11px;
+    border: 1px solid color-mix(in srgb, var(--gold) 32%, transparent);
+    background: var(--gold-soft);
+    font-size: 13.5px;
+    line-height: 1.8;
+    color: color-mix(in srgb, var(--ink-2) 88%, var(--gold));
+  }
+  .tip b { color: var(--ink); }
+  .tip::before {
+    content: "注意 · ";
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .12em;
+    color: var(--gold);
+  }
+
+  .note {
+    margin: 14px 0 0;
+    padding: 12px 14px;
+    border-radius: 11px;
+    background: var(--accent-soft);
+    font-size: 13.5px;
+    line-height: 1.8;
+    color: var(--ink-2);
+  }
+  .note::before {
+    content: "小提示 · ";
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .12em;
+    color: var(--accent);
+  }
+
+  /* ---------- 三步卡片 ---------- */
+  .quick-head {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .quick {
+    display: grid;
+    gap: 10px;
+    margin: 10px 0 26px;
+    padding: 0;
+    list-style: none;
+  }
+  .quick li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 13px 15px;
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    background: var(--card);
+    font-size: 14px;
+  }
+  .quick .k {
+    flex: none;
+    width: 18px;
+    text-align: center;
+    color: var(--accent);
+    font-size: 11px;
+    line-height: 1.9;
+    opacity: .75;
+  }
+
+  /* ---------- 左右两栏示意 ---------- */
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 14px 0 4px;
+  }
+  .split div {
+    padding: 13px 14px;
+    border-radius: 12px;
+    border: 1px dashed var(--line-strong);
+    background: #fffdfb;
+    font-size: 13.5px;
+    line-height: 1.8;
+    text-wrap: pretty;
+  }
+  .split .lab { display: block; margin-bottom: 2px; font-size: 13px; color: var(--accent); }
+
+  /* ---------- 三个输入框 ---------- */
+  .fields {
+    list-style: none;
+    margin: 10px 0 12px;
+    padding: 0;
+    display: grid;
+    gap: 7px;
+  }
+  .fields li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    font-size: 13.5px;
+  }
+  .fields b { flex: none; min-width: 44px; }
+  .fields code { white-space: nowrap; }
+  .fields span { font-size: 12.5px; color: var(--muted); }
+
+  /* ---------- 每条问题 ---------- */
+  .qa { margin: 0; }
+  .qa dt {
+    margin-top: 16px;
+    font-weight: 600;
+    font-size: 14.5px;
+    color: var(--ink);
+  }
+  .qa dt:first-child { margin-top: 0; }
+  .qa dd {
+    margin: 4px 0 0;
+    padding-left: 14px;
+    border-left: 2px solid var(--accent-soft);
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+
+  /* ---------- 目录 ---------- */
+  .toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 22px 0 26px;
+  }
+  .toc a {
+    padding: 5px 12px;
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    background: #fff;
+    font-size: 12.5px;
+    text-decoration: none;
+    color: var(--ink-2);
+  }
+  .toc a:hover { border-color: var(--line-strong); color: var(--accent); }
+
+  /* ---------- 结尾 ---------- */
+  .foot {
+    margin-top: 34px;
+    text-align: center;
+    font-family: var(--kai);
+    font-size: 15px;
+    line-height: 2;
+    color: var(--ink-2);
+  }
+  .foot .heart { color: var(--accent); }
+
+  .sig {
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  @media (max-width: 520px) {
+    body { padding: 22px 14px 56px; font-size: 14.5px; }
+    h1 { font-size: 25px; }
+    .card { padding: 17px 16px 16px; border-radius: 14px; }
+    .split { grid-template-columns: 1fr; }
+    h2 { font-size: 17.5px; }
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .card { box-shadow: none; break-inside: avoid; }
+    .toc { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="head">
+    <p class="eyebrow">A Love Letter · 使用说明</p>
+    <h1>这封情书，怎么用</h1>
+    <p class="lede">
+      左边是我写给你的话，右边是我们一起走过的日子。<br>
+      前面几节都是你要用到的，做一次就熟；最后是常见问题，遇到再翻。
+    </p>
+  </header>
+
+  <nav class="toc">
+    <a href="#open">打开它</a>
+    <a href="#look">看到什么</a>
+    <a href="#letter">写你那封</a>
+    <a href="#timeline">添记录</a>
+    <a href="#edit">改和删</a>
+    <a href="#publish">发布上线</a>
+    <a href="#corner">左上角</a>
+    <a href="#faq">常见问题</a>
+  </nav>
+
+  <p class="quick-head">三十秒速览</p>
+
+  <ul class="quick">
+    <li><span class="k">♥</span><div>打开网址，选「你自己」，输口令。</div></li>
+    <li><span class="k">♥</span><div>想改东西就点右下角的 <span class="ui">编辑</span>。</div></li>
+    <li><span class="k">♥</span><div>改完在「发布」页点 <span class="ui">提交到 GitHub</span>，约 1 分钟后线上就更新了。</div></li>
+  </ul>
+
+  <section class="card" id="open">
+    <h2><span class="num">1</span>打开它</h2>
+
+    <p>手机上直接用浏览器打开这个地址，电脑上也一样：</p>
+    <p style="margin:14px 0"><a href="https://zouajun.github.io/love-letter/">https://zouajun.github.io/love-letter/</a></p>
+
+    <p>进去先是一屏「这封情书，是锁着的」：</p>
+    <ol>
+      <li>在<b>「选一下你是谁」</b>里点你自己。</li>
+      <li>输入属于你的口令（这串口令我单独发给你，不写在任何地方）。</li>
+      <li>「在这台设备记住 7 天」默认是勾上的，留着就行，一周内再打开不用重输。</li>
+      <li>点 <span class="ui">打开</span>。</li>
+    </ol>
+
+    <div class="tip">
+      口令忘了就打不开了，而且<b>我也没办法帮你找回</b>——它只用来在你手机里解开内容，服务器上没有存。所以先把口令记在只有你知道的地方。
+    </div>
+
+    <div class="note">
+      手机上想更快打开：Safari 点「分享 → 添加到主屏幕」，安卓浏览器点「⋮ → 添加到主屏幕」，以后就是一个图标，点一下就进来。
+    </div>
+  </section>
+
+  <section class="card" id="look">
+    <h2><span class="num">2</span>进去之后你看到什么</h2>
+
+    <div class="split">
+      <div>
+        <span class="lab">左边 · 我写给你的</span>
+        我的名字、在一起第几天、下一个纪念日还有几天、一张拍立得，下面是一封<b>我写给你的信</b>——这封信永远是我写的那一封。
+      </div>
+      <div>
+        <span class="lab">右边 · 时间轴</span>
+        「我们一起走过」，从第一次见面开始，一条条往下排。金色的卡片是自动生成的纪念日（100 天、1 周年这种）。
+      </div>
+    </div>
+
+    <div class="note">
+      左右两边可以各自滚动。顶上那排年份（今天 / 2026 / 2027…）点一下就能跳到那一年。
+    </div>
+  </section>
+
+  <section class="card" id="letter">
+    <h2><span class="num">3</span>写你那封</h2>
+
+    <p>
+      左边那封信，<b>显示的永远是对方写给你的</b>。所以你最开始进来，左边很可能是「这封还没写」——
+      那不是坏了，是因为我还没写（或者已经写完了，就显示我的）。
+    </p>
+
+    <p>你要写给我那封，这么做：</p>
+    <ol>
+      <li>点右下角的 <span class="ui">编辑</span>（电脑上也可以按 <kbd>Ctrl</kbd>+<kbd>E</kbd>）。</li>
+      <li>右边滑出「编辑内容」，停在 <span class="ui">情书</span> 这一页。</li>
+      <li>往下滚，看到一条分隔线写着<b>「你写的这封」</b>，下面就是给你的输入框。</li>
+      <li>写<b>顶部小字</b>、<b>标题</b>、<b>副标题</b>，然后是<b>正文</b>——空一行就是新的一段。</li>
+      <li>最后写<b>署名</b>，比如「—— 小林林，写在一个下雨的下午」。</li>
+    </ol>
+
+    <div class="tip">
+      <b>你写的内容我什么时候能看到？</b> 你写完后要点「发布」推上去，之后<b>我用我的账号登录</b>，我左边那封信就变成你写的了。
+      在你自己的页面上，左边始终是我的信，看不到你自己写的——这是故意的，各看各的。
+    </div>
+
+    <p style="margin-top:14px">
+      这一页还能改<b>你们的名字</b>、<b>在一起的日期</b>、<b>城市</b>和<b>配色</b>（玫瑰 / 落日 / 星河 三种），
+      以及左边的<b>封面照片</b>：点「换一张」自己传，点「跟随时间轴」就用最早那张。
+    </p>
+  </section>
+
+  <section class="card" id="timeline">
+    <h2><span class="num">4</span>往时间轴里添一条</h2>
+
+    <ol>
+      <li>点 <span class="ui">编辑</span> → 上方切到 <span class="ui">时间轴</span>。</li>
+      <li>右上角点 <span class="ui">+ 添加记录</span>，最上面会多出一行，并自动展开。</li>
+      <li>填<b>日期</b>、选<b>类型</b>（日常 / 纪念日），再写<b>标题</b>和<b>描述</b>。</li>
+      <li>想放照片就点 <span class="ui">+ 添加照片</span>，<b>每条最多 4 张</b>，会自动压缩，不用你处理。</li>
+      <li>点右边的 <span class="ui">收起</span>。</li>
+    </ol>
+
+    <p style="margin-top:12px">
+      已经有的记录，点那一行也会展开成一样的表单，改完收起即可。
+    </p>
+
+    <div class="note">
+      页面最下面有<b>「自动生成纪念日」</b>：填好天数（默认 100、200、300、520、1000）和周年数量，100 天、1 周年这种就会自己出现在时间轴上，不用手动记。
+      某一条不想要，在它后面点 <span class="ui ui--ghost">隐藏</span> 就行；如果那天你已经手写了记录，它会自动让位，显示「当天已有手写记录」。
+    </div>
+  </section>
+
+  <section class="card" id="edit">
+    <h2><span class="num">5</span>改、删、撤销</h2>
+
+    <p><b>改：</b>展开那一行，直接改，收起就生效。</p>
+
+    <p style="margin-top:12px"><b>删：</b>展开后点 <span class="ui ui--ghost">删除这一条</span>，按钮会变成「真的删掉？」，再点一次才真删——这样不会手滑。</p>
+
+    <p style="margin-top:12px"><b>删错了：</b>删完屏幕下方会弹出一条「已删除「xxx」」，后面跟着 <span class="ui">撤销</span>，<b>7 秒内</b>点它就能放回原位。</p>
+
+    <div class="tip">
+      改完记得回「发布」页点提交。不提交的话，改动只存在你这台设备上——而且<b>最多留 1 天</b>，超过 1 天会自动丢掉，显示回线上版本。
+    </div>
+  </section>
+
+  <section class="card" id="publish">
+    <h2><span class="num">6</span>发布上线</h2>
+
+    <p>这一步是把你的改动真正写进网站，我才能看得到。</p>
+
+    <ol>
+      <li>编辑器里切到 <span class="ui">发布</span>。</li>
+      <li>最上面那条会写「草稿已保存 · 时间 · 几条记录 · 约几 KB」，说明你的改动已经存在本机了。</li>
+      <li>点 <span class="ui">提交到 GitHub</span>，等几秒，出现「已提交 · 约 1 分钟后线上更新」就好了。</li>
+      <li>大概 1 分钟后刷新页面，就能看到新的内容。</li>
+    </ol>
+
+    <h3>第一次发布，要填一次 Token</h3>
+    <p>「发布」页里有三个框：</p>
+    <ul class="fields">
+      <li><b>仓库</b><code>zouajun/love-letter</code></li>
+      <li><b>分支</b><code>main</code></li>
+      <li><b>Token</b><span>← 这个找我要，我会单独发你一串，粘贴进去就行</span></li>
+    </ul>
+    <p>前两个已经填好了，只有 Token 是空的。</p>
+    <ul>
+      <li>填一次就记住，下次不用再填（框里会显示「已保存，留空则沿用」）。</li>
+      <li>它<b>只存在你这台设备的浏览器里</b>，不会写进网站，也不会跟着内容发出去。</li>
+      <li>换手机、换浏览器、清过缓存，就需要再填一次。</li>
+      <li>这串东西等于我账号的钥匙，<b>别转给别人</b>；万一泄露了告诉我一声，我去作废重发。</li>
+    </ul>
+
+    <div class="note">
+      不想等 1 分钟的话：发布完直接点左边的 <b>刷新按钮</b>，看到的就是最新版本。
+    </div>
+  </section>
+
+  <section class="card" id="corner">
+    <h2><span class="num">7</span>左上角那两个小东西</h2>
+
+    <p><b>头像（你的名字最后一个字）</b>：点开能看到现在是哪个账号登着，下面有一个 <span class="ui ui--ghost">退出登录</span>。退出会清掉这台设备上的钥匙，再进来要重输口令。两个人共用一台电脑时可以这样切换。</p>
+
+    <p style="margin-top:12px"><b>圆圈箭头（刷新）</b>：等于「丢掉本地没发布的改动，重新载入线上版本」。有改动时会先问你一句，确认了才丢。页面看起来不对、或者想放弃这次改动，点它。</p>
+  </section>
+
+  <section class="card" id="faq">
+    <h2><span class="num">8</span>常见问题</h2>
+
+    <dl class="qa">
+      <dt>照片进来先是一块空白，过一会儿才出现？</dt>
+      <dd>正常。照片是加密存的，要下载下来再在你手机里解开，第一张大约半秒到几秒。解过一次会存在本地，再看不卡。</dd>
+
+      <dt>刚发布完，刷新还是旧的？</dt>
+      <dd>线上有大约 10 分钟的缓存。强制刷新一下（电脑 <kbd>Ctrl</kbd>+<kbd>F5</kbd>，手机就关掉页面重开），或者直接点左上角的刷新按钮。</dd>
+
+      <dt>左栏写着「这封还没写」？</dt>
+      <dd>那是对方还没写（或者还没发布）。你自己写给你的那封在 <span class="ui">编辑</span> → <span class="ui">情书</span> 里，左边永远不显示你自己写的那封。</dd>
+
+      <dt>我改了名字 / 换了城市，怎么生效？</dt>
+      <dd>改完在「发布」页提交。登录页上的名字也会跟着变（下次打开就是新的）。</dd>
+
+      <dt>写了一半关掉了，会丢吗？</dt>
+      <dd>不会，改动自动存本机（状态条会写「草稿已保存 · 时间」）。但<b>只保留 1 天</b>，超过就会自动清掉，所以最好当天写完当天提交。</dd>
+
+      <dt>网站别人能打开吗？</dt>
+      <dd>能打开，但只看到登录那一屏和一堆解不开的密文。内容是真的加密过的，没口令看不到里面的字和照片。</dd>
+    </dl>
+  </section>
+
+  <p class="foot">
+    就这样，其实只有三件事：<br>
+    点「编辑」写下来 · 点「发布」推上去 · 剩下的就随便逛 <span class="heart">❤</span>
+    <span class="sig">Written in code, for you.</span>
+  </p>
+
+</div>
+</body>
+</html>
