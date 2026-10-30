@@ -2,7 +2,7 @@
    程序员的情书 · 主逻辑
    ========================================================= */
 
-import { loadInitial, writeDraft } from './store.js';
+import { loadInitial, writeDraft, readDraft, clearDraft } from './store.js';
 import { buildTimeline, letterFor } from './content.js';
 import { renderLeft, renderRight } from './render.js';
 import { applyPalette, toast, openLightbox, esc } from './ui.js';
@@ -59,6 +59,19 @@ function closeUserMenu() {
   if (chip) chip.setAttribute('aria-expanded', 'false');
 }
 
+function closeRefreshPop() {
+  const pop = $('refreshPop');
+  const btn = $('userRefresh');
+  if (!pop || pop.hidden) return;
+  pop.hidden = true;
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+function closePops() {
+  closeUserMenu();
+  closeRefreshPop();
+}
+
 function renderUserDock() {
   const dock = $('userDock');
   const me = currentUser();
@@ -74,12 +87,23 @@ function renderUserDock() {
       <span class="user-name">${esc(me.name)}</span>
       <svg class="user-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
     </button>
-    <div class="user-menu" id="userMenu" hidden>
+    <button type="button" class="user-refresh" id="userRefresh" aria-haspopup="true" aria-expanded="false" title="刷新（放弃本地改动，载入线上版本）">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 6.3"/><path d="M20 4.5V11h-6.4"/></svg>
+      <span class="sr-only">刷新</span>
+    </button>
+    <div class="dock-pop user-menu" id="userMenu" hidden>
       <p class="user-menu-head">当前登录 · <b>${esc(me.name)}</b></p>
       <button type="button" class="user-menu-item" data-act="logout" role="menuitem">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 17l5-5-5-5"/><path d="M20 12H9"/><path d="M12 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/></svg>
         退出登录
       </button>
+    </div>
+    <div class="dock-pop refresh-pop" id="refreshPop" hidden>
+      <p>放弃这台设备上还没发布的改动，重新载入线上版本？</p>
+      <div class="refresh-actions">
+        <button type="button" class="btn btn--danger btn--sm" data-act="refresh-yes">刷新</button>
+        <button type="button" class="btn btn--sm" data-act="refresh-no">取消</button>
+      </div>
     </div>`;
   dock.hidden = false;
 
@@ -88,6 +112,7 @@ function renderUserDock() {
     e.stopPropagation();
     const menu = $('userMenu');
     if (!menu) return;
+    closeRefreshPop();
     const open = menu.hidden;
     menu.hidden = !open;
     chip.setAttribute('aria-expanded', open ? 'true' : 'false');
@@ -97,10 +122,38 @@ function renderUserDock() {
     if (!e.target.closest('[data-act="logout"]')) return;
     logout();
   });
+
+  const refresh = $('userRefresh');
+  refresh.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeUserMenu();
+    /* 没有本地改动就没必要吓人，直接刷新 */
+    if (!readDraft()) {
+      location.reload();
+      return;
+    }
+    const pop = $('refreshPop');
+    const open = pop.hidden;
+    pop.hidden = !open;
+    refresh.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  $('refreshPop').addEventListener('click', (e) => {
+    const act = e.target.closest('[data-act]');
+    if (!act) return;
+    if (act.dataset.act === 'refresh-no') {
+      closeRefreshPop();
+      return;
+    }
+    if (act.dataset.act === 'refresh-yes') {
+      clearDraft();
+      location.reload();
+    }
+  });
 }
 
 function logout() {
-  closeUserMenu();
+  closePops();
   forgetSession();
   location.reload();
 }
@@ -373,7 +426,7 @@ async function startApp() {
   renderUserDock();
 
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('#userDock')) closeUserMenu();
+    if (!e.target.closest('#userDock')) closePops();
 
     const writemine = e.target.closest('[data-act="write-mine"]');
     if (writemine) {
@@ -399,7 +452,7 @@ async function startApp() {
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeUserMenu();
+    if (e.key === 'Escape') closePops();
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
       e.preventDefault();
       openEditor();
