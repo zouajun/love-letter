@@ -81,6 +81,87 @@ function normalizeLetter(raw) {
   };
 }
 
+/* ------------------------------------------------------------------ */
+/* 小本本：只有她能看见的记仇本                                        */
+/* 数据放在内容里，和别的内容一起加密；界面上只对她的账号开口           */
+/* ------------------------------------------------------------------ */
+
+export const ANGER_LABELS = ['小本本记一下', '认真记', '大写特写'];
+
+/** 小本本归谁：lock.json 里的账号 id */
+export const GRUDGE_OWNER = 'lxm';
+
+export function emptyGrudge() {
+  return { entries: [] };
+}
+
+function normalizeGrudge(raw) {
+  const src = raw && typeof raw === 'object' ? raw : {};
+  const list = Array.isArray(src.entries) ? src.entries : [];
+  const entries = [];
+  const used = new Set();
+
+  list.forEach((g) => {
+    if (!g || typeof g !== 'object') return;
+    const d = parseDate(g.date);
+    if (!d) return;
+    let id = str(g.id).trim() || uid('g');
+    while (used.has(id)) id = uid('g');
+    used.add(id);
+
+    const resolved = !!g.resolved;
+    const rd = resolved ? parseDate(g.resolvedAt) || d : null;
+    entries.push({
+      id,
+      date: toISO(d),
+      title: str(g.title).trim() || '记一笔',
+      text: str(g.text).trim(),
+      anger: Math.min(3, Math.max(1, Math.round(Number(g.anger) || 1))),
+      resolved,
+      resolvedAt: rd ? toISO(rd) : ''
+    });
+  });
+
+  /* 新的在前 */
+  entries.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  return { entries };
+}
+
+/** 本子顶上那行统计 */
+export function grudgeStats(entries, startDate, now = new Date()) {
+  const list = Array.isArray(entries) ? entries : [];
+  const start = parseDate(startDate) || startOfToday(now);
+  const today = startOfToday(now);
+  const total = list.length;
+  const pending = list.filter((e) => !e.resolved).length;
+
+  let longest = 0;
+  list.forEach((e) => {
+    if (!e.resolved) return;
+    const from = parseDate(e.date);
+    const to = parseDate(e.resolvedAt) || from;
+    if (!from || !to) return;
+    longest = Math.max(longest, Math.max(0, diffDays(from, to)));
+  });
+
+  return {
+    total,
+    pending,
+    resolved: total - pending,
+    days: Math.max(1, diffDays(start, today) + 1),
+    longest
+  };
+}
+
+/** 某一条「气了几天」（已消气才有意义） */
+export function angerDays(entry) {
+  const from = parseDate(entry.date);
+  const to = parseDate(entry.resolvedAt) || from;
+  if (!from || !to) return 0;
+  return Math.max(0, diffDays(from, to));
+}
+
+
 /** 把任意外部数据整理成安全、完整的结构 */
 export function normalize(raw) {
   const src = raw && typeof raw === 'object' ? raw : {};
@@ -139,6 +220,7 @@ export function normalize(raw) {
       place: str(couple.place).trim()
     },
     letters,
+    grudge: normalizeGrudge(src.grudge),
     settings: {
       palette: PALETTES.includes(settings.palette) ? settings.palette : 'rose',
       autoMilestones: settings.autoMilestones !== false,

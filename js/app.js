@@ -7,6 +7,7 @@ import { buildTimeline, letterFor } from './content.js';
 import { renderLeft, renderRight } from './render.js';
 import { applyPalette, toast, openLightbox, esc } from './ui.js';
 import { createEditor } from './editor.js';
+import { createGrudge, canUseGrudge } from './grudge.js';
 import { countdown, pad } from './date.js';
 import { loadLock, accounts, unlock, restoreSession, rememberSession, hydrate, rememberNames, currentUser, forgetSession } from './lock.js';
 
@@ -15,6 +16,7 @@ const $ = (id) => document.getElementById(id);
 let content = null;
 let tl = null;
 let editor = null;
+let grudge = null;
 let started = false;
 
 /* ------------------------------------------------------------------ */
@@ -72,6 +74,21 @@ function closePops() {
   closeRefreshPop();
 }
 
+/** 小本本里还没消气的条数 */
+function grudgePending() {
+  if (!content || !content.grudge || !Array.isArray(content.grudge.entries)) return 0;
+  return content.grudge.entries.filter((e) => !e.resolved).length;
+}
+
+/** 菜单里那个小数字，跟着本子里的改动走 */
+function syncGrudgeCount() {
+  const el = document.querySelector('[data-grudge-count]');
+  if (!el) return;
+  const n = grudgePending();
+  el.textContent = n ? String(n) : '';
+  el.hidden = !n;
+}
+
 function renderUserDock() {
   const dock = $('userDock');
   const me = currentUser();
@@ -93,6 +110,12 @@ function renderUserDock() {
     </button>
     <div class="dock-pop user-menu" id="userMenu" hidden>
       <p class="user-menu-head">当前登录 · <b>${esc(me.name)}</b></p>
+      ${canUseGrudge(me) ? `
+      <button type="button" class="user-menu-item" data-act="grudge" role="menuitem">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4.6h5.2c.7 0 1.3.5 1.3 1.2v13.2c0-.7-.6-1.2-1.3-1.2H4z"/><path d="M20 4.6h-5.2c-.7 0-1.3.5-1.3 1.2v13.2c0-.7.6-1.2 1.3-1.2H20z"/><path d="M6.6 8.4h2.4M15 8.4h2.4"/></svg>
+        小本本
+        <span class="user-menu-count" data-grudge-count${grudgePending() ? '' : ' hidden'}>${grudgePending() || ''}</span>
+      </button>` : ''}
       <button type="button" class="user-menu-item" data-act="logout" role="menuitem">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 17l5-5-5-5"/><path d="M20 12H9"/><path d="M12 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/></svg>
         退出登录
@@ -119,8 +142,14 @@ function renderUserDock() {
   });
 
   $('userMenu').addEventListener('click', (e) => {
-    if (!e.target.closest('[data-act="logout"]')) return;
-    logout();
+    if (e.target.closest('[data-act="logout"]')) {
+      logout();
+      return;
+    }
+    if (e.target.closest('[data-act="grudge"]')) {
+      closeUserMenu();
+      openGrudge();
+    }
   });
 
   const refresh = $('userRefresh');
@@ -300,6 +329,25 @@ function openEditor(tab = 'story') {
   editor.open(content, tab);
 }
 
+function openGrudge() {
+  if (!content) {
+    toast('内容还在路上，稍等一下');
+    return;
+  }
+  if (!grudge) {
+    grudge = createGrudge({
+      root: $('grudgeRoot'),
+      onApply(next, changed) {
+        content = next;
+        if (changed) writeDraft(content);
+        paint({ animate: false });
+        syncGrudgeCount();
+      }
+    });
+  }
+  grudge.open(content);
+}
+
 /* ------------------------------------------------------------------ */
 /* 载入                                                                */
 /* ------------------------------------------------------------------ */
@@ -471,6 +519,7 @@ async function startApp() {
     const state = await loadInitial();
     content = state.content;
     paint({ animate: true });
+    syncGrudgeCount();
     if (state.source === 'draft') {
       /* 草稿里的名字也要反映到下次打开的登录页 */
       rememberNames([content.couple.from, content.couple.to]);

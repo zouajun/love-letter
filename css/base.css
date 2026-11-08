@@ -386,6 +386,18 @@ body[data-palette="dusk"] .aura-c { background: radial-gradient(circle at 50% 50
   background: color-mix(in srgb, var(--accent) 9%, transparent);
   color: var(--ink);
 }
+.user-menu-count {
+  margin-left: auto;
+  min-width: 17px;
+  padding: 0 5px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent-2);
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+}
 
 /* ---------- 通用小元素 ---------- */
 .eyebrow {
